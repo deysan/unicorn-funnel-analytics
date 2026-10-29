@@ -1,0 +1,15 @@
+[workflow]
+review_guidance = [
+  "Пиши українською. Дотримуйся AGENTS.md; перегляд не дозволяє імплементацію, коміти або зміну погоджених бізнес-рішень.",
+  "Це етап вимог і сценаріїв, не готовності до імплементації. Відрізняй нові суперечності від явно запланованої технічної деталізації та вже відомих обмежень.",
+  "Кожне зауваження обґрунтуй конкретними пунктами та відтворюваним прикладом. Не вимагай повного корпоративного процесу для малого MVP.",
+  "Погоджені рішення можна критикувати з доказами, але альтернативи не стають прийнятими без рішення власника. Не приписуй відсутній архітектурі конкретну реалізацію."
+]
+output_format = "both"
+
+[[workflow.lenses]]
+code = "adversarial"
+name = "Adversarial"
+applies_to = "any"
+when = "always"
+instruction = "Load references/lens-adversarial.md from the skill root. Apply its critical method and canonical findings shape, with this project override: no minimum finding count. Report only grounded findings; an empty array is valid. Never invent or pad findings to meet the shipped ten-item quota."

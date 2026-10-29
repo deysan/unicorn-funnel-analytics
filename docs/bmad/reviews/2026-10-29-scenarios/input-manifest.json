@@ -1,0 +1,45 @@
+{
+  "head": "a76f54c2e317ec53ce0a39e22f910f649181219a",
+  "input_path": "_bmad/review-inputs/2026-10-29-scenarios.md",
+  "input_sha256": "9525bcf65781f3f5fc62a32aa14609aa35e49ecbfac68186dd247dcd66aa6992",
+  "source_url": "https://docs.google.com/document/d/1gitcbjFaNR_rz8BGErQgLVJqi2njv494-tsCNPPIbRY/edit",
+  "source_fetched": "2026-10-29",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "f295733d1b5ab7493c177324d4bc63660288d00007fcff425fb10bf13c03a94c"
+    },
+    {
+      "path": "README.md",
+      "sha256": "0f016b89fadcea2ea393def09a6454a128096addcd8c177cee0e7a36ac533281"
+    },
+    {
+      "path": "docs/requirements.md",
+      "sha256": "35d03c280b94fc38b070c62c1190736e47f54631276174f86dabb191d2ea5135"
+    },
+    {
+      "path": "docs/decisions.md",
+      "sha256": "580c5050a4d6a40d67ef92b030fa540a24f24efc1b262942dd95e173adba81d9"
+    },
+    {
+      "path": "docs/scenarios.md",
+      "sha256": "b11898e16af3905f23fe8d843cb79af9cea1377a41a8763f6495268e89048afd"
+    },
+    {
+      "path": "docs/plan.md",
+      "sha256": "6defde7171c8e9381c8c27aa80ed970ebf16c48ddc4e9db385380c843506f98c"
+    },
+    {
+      "path": "docs/requirements-audit.md",
+      "sha256": "6f45a29963957e4c88bca7b2db4c57216bc90cdb0115d521f13dab13250a687c"
+    },
+    {
+      "path": "docs/ai-worklog.md",
+      "sha256": "4c7acef3432f7c06f21f24903ef93f6dbe002f175b5afd58249c20ee419a4816"
+    },
+    {
+      "path": "docs/bmad/README.md",
+      "sha256": "6267b0a2481cad02c50a072846ef6018a7a50524d5225c162fbfac1b681af0eb"
+    }
+  ]
+}

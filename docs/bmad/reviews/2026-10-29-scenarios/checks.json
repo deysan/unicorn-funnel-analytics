@@ -1,0 +1,14 @@
+{
+  "markdown_files": 18,
+  "local_links_and_anchors": 62,
+  "broken_links": 0,
+  "decision_ids": 25,
+  "scenario_ids": 14,
+  "requirements_decisions_agents_unchanged": true,
+  "HEAD_unchanged": true,
+  "limited_sensitive_pattern_matches": 0,
+  "html_dimension_sections": 7,
+  "html_findings": 3,
+  "html_template_placeholders": 0,
+  "scope": "Document checks only; no application tests, browser rendering or production validation."
+}

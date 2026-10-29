@@ -1,0 +1,194 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Unicorn — перевірка специфікації</title><style>
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: #e7e5e4;
+    --text: #1c1917;
+    --muted: #78716c;
+
+    --verdict-strong: #16a34a;
+    --verdict-adequate: #65a30d;
+    --verdict-thin: #d97706;
+    --verdict-broken: #dc2626;
+
+    --sev-low: #64748b;
+    --sev-medium: #ca8a04;
+    --sev-high: #ea580c;
+    --sev-critical: #dc2626;
+
+    --grade-exc: #16a34a;
+    --grade-good: #65a30d;
+    --grade-fair: #d97706;
+    --grade-poor: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  header.report-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .title h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .title .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .grade {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: white;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .grade-excellent { background: var(--grade-exc); }
+  .grade-good { background: var(--grade-good); }
+  .grade-fair { background: var(--grade-fair); }
+  .grade-poor { background: var(--grade-poor); }
+
+  .synthesis {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--muted);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    font-size: 15.5px;
+  }
+  .synthesis p { margin: 0 0 10px; }
+  .synthesis p:last-child { margin-bottom: 0; }
+
+  .dimension-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .dim-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .dim-card .dim-name { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .dim-card .dim-verdict { font-size: 14px; font-weight: 600; }
+
+  section.dimension, section.reviewer-section { margin-bottom: 14px; }
+  section.dimension details, section.reviewer-section details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  section summary {
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  section summary::-webkit-details-marker { display: none; }
+  section summary::before {
+    content: "▸";
+    display: inline-block;
+    color: var(--muted);
+    transition: transform 0.15s ease;
+  }
+  section details[open] summary::before { transform: rotate(90deg); }
+  section summary h2 {
+    display: inline;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    flex: 1;
+  }
+  .verdict-pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: white;
+  }
+  .verdict-strong { background: var(--verdict-strong); }
+  .verdict-adequate { background: var(--verdict-adequate); }
+  .verdict-thin { background: var(--verdict-thin); }
+  .verdict-broken { background: var(--verdict-broken); }
+
+  .dim-body { padding: 4px 20px 18px; }
+  .dim-judgment { color: var(--text); font-size: 14.5px; }
+  .dim-judgment p { margin: 0 0 10px; }
+
+  .findings-list { padding: 0 20px 4px; }
+  article.finding {
+    padding: 14px 0;
+    border-top: 1px solid var(--border);
+  }
+  article.finding:first-child { border-top: none; }
+  article.finding header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .badge {
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+  }
+  .badge-sev-low { background: rgba(100, 116, 139, 0.12); color: var(--sev-low); }
+  .badge-sev-medium { background: rgba(202, 138, 4, 0.14); color: var(--sev-medium); }
+  .badge-sev-high { background: rgba(234, 88, 12, 0.14); color: var(--sev-high); }
+  .badge-sev-critical { background: rgba(220, 38, 38, 0.14); color: var(--sev-critical); }
+  .finding-title { margin: 0; font-size: 15px; font-weight: 500; flex: 1; min-width: 200px; }
+  .finding-location { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; color: var(--muted); }
+  .finding-note, .finding-fix { margin-top: 6px; font-size: 14px; }
+  .finding-fix strong { color: var(--muted); font-weight: 500; }
+
+  .reviewer-source {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  .mechanical {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 24px;
+    font-size: 14px;
+  }
+  .mechanical h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .mechanical ul { margin: 0; padding-left: 20px; }
+  .mechanical li { margin-bottom: 4px; color: var(--text); }
+
+  footer.report-footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  footer .meta { display: flex; gap: 24px; flex-wrap: wrap; }
+</style></head><body><div class="container"><header class="report-header"><div class="title"><h1>Unicorn — перевірка специфікації</h1><div class="subtitle">requirements + decisions + scenarios · frozen SC-01–SC-13</div></div><div class="grade grade-excellent">Excellent</div></header><div class="synthesis"><p><strong>Специфікація достатня для початку архітектури:</strong> бізнес-правила, атрибуція,<br>знаменники, повтори та межі MVP узгоджені з первісним ТЗ й мають конкретні<br>наслідки у сценаріях. До завершення пакета сценаріїв варто додати два<br>розділювальні контрольні приклади та виправити застарілий навігаційний<br>статус; вони не потребують нових бізнес-рішень і не блокують архітектурне<br>обговорення. Завершення архітектури, готовність до імплементації й<br>коректність реалізації цим переглядом не підтверджуються.</p><p>Це оцінка замороженого входу SC-01–SC-13 для переходу до архітектури, не готовності до коду. Виявлені прогалини контрольних прикладів і навігації виправлено після огляду; деталі й вузька повторна перевірка — у report.md. Підсумкову оцінку після змін заново не виставляли.</p></div><div class="dimension-summary"><div class="dim-card"><div class="dim-name">Decision-readiness</div><div class="dim-verdict" style="color:var(--verdict-strong)">strong</div></div><div class="dim-card"><div class="dim-name">Substance over theater</div><div class="dim-verdict" style="color:var(--verdict-strong)">strong</div></div><div class="dim-card"><div class="dim-name">Strategic coherence</div><div class="dim-verdict" style="color:var(--verdict-strong)">strong</div></div><div class="dim-card"><div class="dim-name">Done-ness clarity</div><div class="dim-verdict" style="color:var(--verdict-adequate)">adequate</div></div><div class="dim-card"><div class="dim-name">Scope honesty</div><div class="dim-verdict" style="color:var(--verdict-strong)">strong</div></div><div class="dim-card"><div class="dim-name">Downstream usability</div><div class="dim-verdict" style="color:var(--verdict-adequate)">adequate</div></div><div class="dim-card"><div class="dim-name">Shape fit</div><div class="dim-verdict" style="color:var(--verdict-strong)">strong</div></div></div><section class="dimension"><details><summary><h2>Decision-readiness</h2><span class="verdict-pill verdict-strong">strong</span></summary><div class="dim-body"><div class="dim-judgment"><p>Рішення можна використати для вибору моделі даних і компонентів: D-008<br>однозначно впорядковує кілька Lead, D-010 відокремлює бізнес-подію від<br>доставки, D-014 задає групи входу, D-017–D-018 — надійне прийняття та<br>поведінку при заповненні. Компроміси названі прямо: браузерна ідентичність<br>не є фізичною особою (D-003), останній запис може не відповідати останньому<br>кліку (D-015), буфер не гарантує доби безперервного піку (D-018).</p><p>Прийняті рішення, погоджені припущення й невизначені технічні механізми<br>розділені. Q-01–Q-10 у <code>docs/requirements.md:266–281</code> не маскують<br>незавершені механізми під закриті технічні питання; план ставить дані та<br>архітектуру наступним етапом (<code>docs/plan.md:19–27</code>). Для початку цього<br>етапу суттєвого нерозв&#x27;язаного бізнес-вибору не виявлено.</p></div></div><div class="findings-list"></div></details></section><section class="dimension"><details><summary><h2>Substance over theater</h2><span class="verdict-pill verdict-strong">strong</span></summary><div class="dim-body"><div class="dim-judgment"><p>Документ описує конкретну воронку, а не універсальний продукт: активний<br>Lead перемагає EPU, універсальний 007 не бере участі в конкурсі<br>спеціалізованих оферів, один ClickID може мати кілька окремих покупок.<br>Персони, ринкова новизна або формальні продуктові KPI не додані заради<br>шаблону; для тестового завдання вони не потрібні.</p><p>NFR мають предметний зміст: 12 млн подій/місяць і пік із заданою тривалістю,<br>p95 окремо для операцій та двох точок, пороги 80/95/100%, незалежні строки<br>30/90/180 днів. SC-09–SC-13 перетворюють гарантії на спостережувані<br>наслідки. Відсутність перевірених гарантій конкретного сервісу чесно<br>віднесена до майбутнього вибору архітектури, а не замінена прикметником<br>«надійний».</p></div></div><div class="findings-list"></div></details></section><section class="dimension"><details><summary><h2>Strategic coherence</h2><span class="verdict-pill verdict-strong">strong</span></summary><div class="dim-body"><div class="dim-judgment"><p>Мета в <code>docs/requirements.md:20–38</code> відповідає ТЗ: зібрати події,<br>застосувати правила та показати коректний звіт у невеликому наскрізному MVP.<br>Пропонований зріз у <code>docs/plan.md:29–35</code> і SC-01–SC-02 проходять увесь<br>цей шлях. Обмеження одного квізу, заданого каталогу, тестових постбеків і<br>простого звіту підтримують саме цю мету; адмінка та production-міграція<br>не додані як приховані передумови.</p><p>Успіх оцінюється відтворюваністю і коректністю даних, що доречно для<br>інженерного тестового. Немає потреби вигадувати цілі з росту аудиторії<br>або доходу. Показники захищені від хибної інтерпретації: покупки не<br>дорівнюють покупцям, імітований перехід не доводить відкриття партнера,<br>старий Lead не є конверсією нового ClickID, а поточний відвал не названо<br>остаточною втратою користувача (D-013–D-014, D-024; SC-02, SC-07).</p></div></div><div class="findings-list"></div></details></section><section class="dimension"><details><summary><h2>Done-ness clarity</h2><span class="verdict-pill verdict-adequate">adequate</span></summary><div class="dim-body"><div class="dim-judgment"><p>FR-01–FR-13 мають перевірні наслідки через вимоги, D-003–D-025 та сценарії.<br>Є кількісні очікування звіту (SC-01–SC-02, SC-07, SC-11), межі часу<br>(SC-11), поведінка відмов і повторів (SC-09–SC-10), збереження незалежних<br>строків (SC-12) і матриця доступу (SC-13). Це достатньо для архітектурного<br>проєктування перевірюваної системи.</p><p>Водночас frozen пакет прикладів не закриває дві явні гілки покриття.<br>Самі правила визначені, тому наведені нижче зауваження стосуються<br>завершення контрольних прикладів, а не неоднозначних бізнес-рішень.<br>Точний HTTP-контракт, семантика часу звіту та профіль навантаження ще<br>потрібні до реалізації; вони вже явно внесені до завдань дизайну.</p></div></div><div class="findings-list"><article class="finding"><header><span class="badge badge-sev-low">low</span></header><div class="finding-note"><p>R-01 — немає контрольної конфігурації з рівним EPU<br>  (<code>docs/requirements.md:49,64–76</code>; <code>docs/scenarios.md:334–348,414–424</code>) —<br>  FR-06 вимагає мінімальний ID при однаковому EPU, але початковий каталог<br>  має різні EPU, SC-05 змінює лише активність, а рівність у SC-06 стосується<br>  часу Lead. Реалізація, що за рівного EPU бере перший отриманий елемент,<br>  могла б пройти всі ці приклади. *Fix:* додати незалежну синтетичну<br>  конфігурацію двох відповідних спеціалізованих оферів із рівним EPU,<br>  зворотним порядком у вхідному списку та очікуванням найменшого ID;<br>  прямо позначити її тестовою, не зміною початкового каталогу.</p></div></article><article class="finding"><header><span class="badge badge-sev-low">low</span></header><div class="finding-note"><p>R-02 — обіцяне розділення прелендів не має контрольного набору<br>  (<code>docs/requirements.md:118</code>; <code>docs/decisions.md:490–505</code>;<br>  <code>docs/scenarios.md:42–60,155–185</code>) — D-021 прямо передбачає синтетичні<br>  дані двох прелендів, але SC-01–SC-13 використовують лише P1. Через це<br>  наведені очікування не відрізняють правильну фільтрацію від звіту, який<br>  ігнорує PrelandID. *Fix:* додати компактний приклад P1/P2 з переходами<br>  та різними партнерськими результатами, перевірити обидва блоки звіту<br>  й атрибуцію через ClickID. Включити одного UserID на обох прелендах,<br>  щоб явно показати неадитивність унікальних лічильників; очікування<br>  вивести з D-014, D-021–D-022 без нового правила атрибуції.</p></div></article></div></details></section><section class="dimension"><details><summary><h2>Scope honesty</h2><span class="verdict-pill verdict-strong">strong</span></summary><div class="dim-body"><div class="dim-judgment"><p>Межі послідовні: реальний BigQuery не потрібен у MVP, імітується вихід на<br>партнерський сайт, але ClickID і записані події справжні; приймач експорту<br>імітується для перевірки поведінки відмов. Малий бюджет 20 у SC-10 прямо<br>не видається за підтвердження production-місткості. Майбутні виключення<br>після Purchase та розрахунок EPU залишені поясненням дизайну<br>(<code>docs/requirements.md:95–101</code>; D-017, D-024; SC-10).</p><p>A-01–A-03 мають статус і наслідки, а D-012 прямо називає 5 хвилин погодженим<br>припущенням MVP. Технічні відкриті питання сконцентровані в<br><code>docs/requirements-audit.md:81–105</code> і межах сценаріїв. Їх багато через<br>наступний етап архітектури, але це не прихована невизначеність уже<br>оголошеної готовності до реалізації. Сценарії систематично відокремлюють<br>очікування від фактичних тестів.</p></div></div><div class="findings-list"></div></details></section><section class="dimension"><details><summary><h2>Downstream usability</h2><span class="verdict-pill verdict-adequate">adequate</span></summary><div class="dim-body"><div class="dim-judgment"><p>Джерело істини назване явно: <code>requirements.md</code> разом із прийнятими<br>рішеннями; сценарії деталізують їх, а звіти рев&#x27;ю не змінюють автоматично.<br>Ідентифікатори вимог, рішень та сценаріїв дозволяють витягнути правила<br>для архітектури. Окремого словника немає, але ключові терміни визначені<br>предметно: UserID — браузерна ідентичність, ClickID — конкретний перехід,<br>PartnerEventID — бізнес-подія партнера, EventID — внутрішня подія<br>(D-003, D-009–D-010). Їхньої зміни значення між сценаріями не виявлено.</p><p>Сценарії мають конкретних учасників і передумови: U1 та перевіряючий у<br>SC-01–SC-02, дві вкладки одного U7 у SC-08, окремі профілі й PartnerA<br>у SC-13. Читачу не потрібні штучні персони, щоб зрозуміти дії. Є одна<br>фактична похибка навігаційного опису, яку слід прибрати при закритті етапу.</p></div></div><div class="findings-list"><article class="finding"><header><span class="badge badge-sev-low">low</span></header><div class="finding-note"><p>R-03 — BMAD README описує застарілий обсяг сценаріїв<br>  (<code>docs/bmad/README.md:43–50</code>; <code>docs/scenarios.md:3–8</code>;<br>  <code>docs/plan.md:23</code>) — таблиця входів BMAD каже «поки описаний лише SC-01»,<br>  хоча frozen документ уже містить SC-01–SC-13. Це чинна навігаційна<br>  таблиця, а не позначений історичний запис; наступний workflow може<br>  отримати хибне уявлення про доступне покриття. *Fix:* узгодити рядок<br>  таблиці з фактичним діапазоном і поточним статусом завершальної перевірки.</p></div></article></div></details></section><section class="dimension"><details><summary><h2>Shape fit</h2><span class="verdict-pill verdict-strong">strong</span></summary><div class="dim-body"><div class="dim-judgment"><p>Форма capability specification з каталогом, рішеннями та конкретними<br>сценаріями відповідає малому інженерному тестовому. Тут важливі коректні<br>правила, наскрізне демо й пояснення компромісів; великий продуктовий PRD<br>з ринковим аналізом, persona-блоками та бізнесовими success metrics<br>не покращив би джерело для архітектури.</p><p>Розподіл документів відповідає їхнім ролям: вимоги зберігають джерело,<br>рішення — підстави та наслідки, сценарії — контрольовані приклади, план —<br>етапи. Довгі записи рішень і історія плану не роблять відсутню архітектуру<br>завершеною, і документи цього не стверджують. Потрібні для здачі короткий<br>system design та схема залишаються окремими майбутніми артефактами.</p></div></div><div class="findings-list"></div></details></section><div class="mechanical"><h3>Mechanical notes</h3><p>- Програмно перевірено декларації у frozen тексті: FR-01–FR-13,<br>  NFR-01–NFR-07, DEL-01–DEL-07, A-01–A-03, Q-01–Q-10, D-001–D-025 та<br>  SC-01–SC-13 послідовні й унікальні. Посилань на відсутній ID цих груп<br>  не знайдено. Це перевірка документа, не тест застосунку.<br>- Проєкт не використовує буквальні <code>[ASSUMPTION]</code> та <code>[NOTE FOR PM]</code>.<br>  Їхню функцію виконують таблиці статусів і межі рішень; вимагати іншого<br>  синтаксису лише для шаблону немає підстав. Зокрема погоджений допуск<br>  годинників явно атрибутований у D-012, хоча не є окремим рядком A-індексу.<br>- Терміни Lead/Purchase, UserID, EventID, PartnerEventID, ClickID і PrelandID<br>  використовуються узгоджено. Службові позначення U1/C1 тощо пояснені як<br>  синтетичні, а не обраний формат ідентифікаторів.<br>- Історичні «наступне питання» у <code>plan.md</code> не трактувалися як поточний статус.<br>  R-03 стосується саме актуальної таблиці входів BMAD. Відсутність<br>  <code>system-design.md</code> та <code>implementation-plan.md</code> явно запланована й не<br>  зарахована як зламане посилання чи пропуск готової реалізації.</p><p>Зауваження: <strong>critical — 0; high — 0; medium — 0; low — 3</strong>.<br>Джерела не редагувалися; бізнес-рішення не приймалися; код, сервіси,<br>автоматизовані тести застосунку й зовнішні URL цим переглядом не перевірялися.</p></div><p><a href="report.md">BMAD Review і стан виправлень</a> · <a href="validation-report.md">Markdown-звіт</a> · <a href="reconcile-source.md">Звірка ТЗ</a></p><footer class="report-footer"><div class="meta"><span>Rubric: .agents/skills/bmad-prd/assets/prd-validation-checklist.md</span><span>Generated: 2026-10-29T15:11:11+00:00</span></div></footer></div></body></html>

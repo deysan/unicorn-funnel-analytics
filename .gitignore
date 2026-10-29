@@ -10,3 +10,12 @@ node_modules/
 dist/
 coverage/
 *.log
+
+# BMAD: generated runtime/skills are reproducible; keep project overrides.
+.agents/skills/bmad-*/
+_bmad/*
+!_bmad/custom/
+_bmad/custom/*
+!_bmad/custom/config.toml
+!_bmad/custom/bmad-review.toml
+_bmad/**/*.user.toml

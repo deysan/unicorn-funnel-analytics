@@ -1,0 +1,32 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "4dd4f2792e8231b9d0c947ff668649cfc13c6905181e3e07493e8903565a883f"
+    },
+    {
+      "path": "docs/plan.md",
+      "sha256": "ce29bbd3b534d1660c292747eb41647e5ffccf4bf629831b048cb9a4bfb419c0"
+    },
+    {
+      "path": "docs/plan-history.md",
+      "sha256": "c853c9470d1be5f26b795f41653328c405b6baa45551137959633dd3e2a0bbd3"
+    },
+    {
+      "path": "docs/scenarios.md",
+      "sha256": "bf01ed98d90d8908599eb411717a07d84d3a17e26d0a967250ad7a5a9d0512b3"
+    },
+    {
+      "path": "docs/scenarios-audit.md",
+      "sha256": "f17f70bb58591125b624242d470ce78905bc7bea8f08a1dbceca3c4c43a3c364"
+    },
+    {
+      "path": "docs/bmad/README.md",
+      "sha256": "23828b2d621eb7a84a9cbe46deabf44bf080032b17b10735ccce999537ce3170"
+    },
+    {
+      "path": "docs/ai-worklog.md",
+      "sha256": "501a6741267a38943f9a02af87e055bf8b2c885335501874e9c536e5b24f9022"
+    }
+  ]
+}

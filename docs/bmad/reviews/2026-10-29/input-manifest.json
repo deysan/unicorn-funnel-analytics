@@ -1,0 +1,21 @@
+{
+  "input_snapshot": "_bmad/review-inputs/2026-10-29-requirements.md",
+  "input_sha256": "696e36f54fba2e4da96686436d1d51202b8967443c0fa593aa3415d9fc841435",
+  "files": {
+    "AGENTS.md": "a761d85447cb0d84d025b919b4d09b08fe7ed883bc97aea0356b84dd48a21f76",
+    "README.md": "5bcdaf2845a3dfc2ffa1361ac9dce65be314673b74bae21074d37e6a633e116c",
+    "docs/requirements.md": "35d03c280b94fc38b070c62c1190736e47f54631276174f86dabb191d2ea5135",
+    "docs/decisions.md": "580c5050a4d6a40d67ef92b030fa540a24f24efc1b262942dd95e173adba81d9",
+    "docs/plan.md": "2812249e187ff4dbc7d277b492d58fb9f63b261bf08e24922b053ffd5b15d82c",
+    "docs/requirements-audit.md": "6f45a29963957e4c88bca7b2db4c57216bc90cdb0115d521f13dab13250a687c",
+    "docs/scenarios.md": "ce6e100bd518e7e5ea720d5d19392db5d17359870029756116d117583fad2b41"
+  },
+  "version": "6.12.4",
+  "lenses": [
+    "adversarial",
+    "edge-case-hunter"
+  ],
+  "scope": "requirements and plan before implementation",
+  "source_tree": "a76f54c plus uncommitted SC-01, README and plan; before BMAD integration edits",
+  "findings_are_accepted_decisions": false
+}
