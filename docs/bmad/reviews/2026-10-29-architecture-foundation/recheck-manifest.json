@@ -1,0 +1,30 @@
+{
+  "scope": "Targeted recheck of status and structural fixes; not a full second audit",
+  "diff_sha256": "c1c36e0ff869c8ec00acff672659dd2c7dfa1bf0c4f5a8096e6e6a3b8798bf43",
+  "files": [
+    {
+      "path": "docs/decisions.md",
+      "sha256": "85c21437c9077425dbd6903e3fb629c952c979acfa27607f72c263713f5271b7"
+    },
+    {
+      "path": "docs/cloudflare-free-tier.md",
+      "sha256": "bf9c6ce10a92b1f914245155f0bf6397a1c4420a1d860c0b23b0fb5a82a6a698"
+    },
+    {
+      "path": "docs/plan.md",
+      "sha256": "f342f17331f6be0a93da3fe36f5e957094fd0faf03ad37a23e9e5e568793de12"
+    },
+    {
+      "path": "docs/bmad/README.md",
+      "sha256": "d7a5b103db9707afcb097e23e77839e51a57a89c7af15f29311367a99f37b96c"
+    },
+    {
+      "path": "docs/system-design.md",
+      "sha256": "6e706cb17c81809f0b3b55059ac8f3dc458e054cd5ec5fd700e1f6c7b53be754"
+    },
+    {
+      "path": "docs/requirements.md",
+      "sha256": "b70f52f03f0a9f5e865852df3570b9a6ccc33b42a04ac4c3567091e6a341580b"
+    }
+  ]
+}

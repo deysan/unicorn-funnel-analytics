@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-29",
+  "scope": "Documentation consistency checks; no app tests or visual render",
+  "markdown_files": 24,
+  "relative_links_checked": 99,
+  "anchors_checked": 18,
+  "broken_links": [],
+  "diagram": {
+    "json_parse": true,
+    "svg_xml_parse": true,
+    "elements": 48,
+    "duplicate_ids": 0,
+    "text_labels": 31,
+    "missing_svg_labels": [],
+    "extra_svg_labels": [],
+    "visual_render_verified": false,
+    "excalidraw_import_verified": false
+  },
+  "decision_ids_contiguous": true,
+  "sensitive_pattern_matches": [],
+  "sensitive_scan_limit": "Heuristic pattern scan, not proof of absence of all sensitive data",
+  "business_scenarios_unchanged": true
+}

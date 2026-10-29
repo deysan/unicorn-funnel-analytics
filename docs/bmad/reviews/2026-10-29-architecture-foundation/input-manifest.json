@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-29",
+  "scope": "D-026–D-031: architecture foundation",
+  "head": "ffbe9135ccef9a0a2a84f91f3dff4ac4558f0462",
+  "staged_diff_sha256": "26682e02b234c2827b360b83bc4e398c903a36add0da38d50e8065e5eabe06b0",
+  "source_url": "https://docs.google.com/document/d/1gitcbjFaNR_rz8BGErQgLVJqi2njv494-tsCNPPIbRY/edit",
+  "source_fetched": "2026-10-29",
+  "source_evidence": "Source excerpt from the earlier scenarios audit input; not re-fetched in this audit",
+  "source_sha256": "2a7737b5247e4e1c04778c197d20b3198513d14cda9cb36cb33ecd26b32f5654",
+  "files": [
+    {
+      "path": "README.md",
+      "role": "changed",
+      "sha256": "f44ab4e7c4377c965c2a012c6ee7f60e18885e9913d1b315cddb83ece357c074"
+    },
+    {
+      "path": "_bmad/custom/bmad-review.toml",
+      "role": "changed",
+      "sha256": "d2482670a4e3e9b6cd57cc2defcf189686897940a952b636b3dee0927a6e4336"
+    },
+    {
+      "path": "docs/ai-worklog.md",
+      "role": "changed",
+      "sha256": "9e816ffb4645bd757d60fdd410083d1965dd570479ba3955b8517a52c6ab7d20"
+    },
+    {
+      "path": "docs/bmad/README.md",
+      "role": "changed",
+      "sha256": "3e6772e06370cc5235cc7225be8928d6d635ab1ca9df1b2a1f1288b455c8a348"
+    },
+    {
+      "path": "docs/decisions.md",
+      "role": "changed",
+      "sha256": "c95d5d23c2fa7731b0d495ccf71c2d5cd45b3a8218ac98a965d8240a60e8d332"
+    },
+    {
+      "path": "docs/plan.md",
+      "role": "changed",
+      "sha256": "a0496a000e36d32ab0dd807c6171ab22554ef00cbf8510563c94206539a93d73"
+    },
+    {
+      "path": "docs/requirements.md",
+      "role": "changed",
+      "sha256": "2268db6a1c450a96305adb88c74383e744227609c776e2742b76faf056203d57"
+    },
+    {
+      "path": "docs/scenarios-audit.md",
+      "role": "changed",
+      "sha256": "42729856b40524d50ebd1e7b6242c769c266fda5fb7e6d80b93f736afd5cee4f"
+    },
+    {
+      "path": "docs/bmad/planning-artifacts/architecture/architecture-Unicorn-2026-10-29/.memlog.md",
+      "role": "changed",
+      "sha256": "1581ef37de659469114f3abd7dc8381c2baef8a9dcdd64bdcf64deeb88aaf92b"
+    },
+    {
+      "path": "docs/bmad/planning-artifacts/architecture/architecture-Unicorn-2026-10-29/ARCHITECTURE-SPINE.md",
+      "role": "changed",
+      "sha256": "52bcbd38263432ec1a3735586207c4bfb20eb423cb5b460feca78a592a249a9f"
+    },
+    {
+      "path": "docs/cloudflare-free-tier.md",
+      "role": "changed",
+      "sha256": "e1bd2b689cb96263e48d69252f610a382100de0bb13c53a685da9c0e14042444"
+    },
+    {
+      "path": "docs/diagrams/system-context.excalidraw",
+      "role": "changed",
+      "sha256": "e0433609bf0f4eb2a01f6a5439342f6f86bdfe6609182295d6a9344dd821b522"
+    },
+    {
+      "path": "docs/diagrams/system-context.svg",
+      "role": "changed",
+      "sha256": "cdaeb3b70cf2c44439eaf2bcdcc62c27cbf582656c93bc21f506a34a4b9c08ed"
+    },
+    {
+      "path": "docs/system-design.md",
+      "role": "changed",
+      "sha256": "5efb9e8902e2a99e63c95d0278b70fd7bafe1ac518b72445d58014781af1a32b"
+    },
+    {
+      "path": "AGENTS.md",
+      "role": "context",
+      "sha256": "f295733d1b5ab7493c177324d4bc63660288d00007fcff425fb10bf13c03a94c"
+    },
+    {
+      "path": "docs/scenarios.md",
+      "role": "context",
+      "sha256": "bf01ed98d90d8908599eb411717a07d84d3a17e26d0a967250ad7a5a9d0512b3"
+    },
+    {
+      "path": "docs/requirements-audit.md",
+      "role": "context",
+      "sha256": "6f45a29963957e4c88bca7b2db4c57216bc90cdb0115d521f13dab13250a687c"
+    }
+  ]
+}
