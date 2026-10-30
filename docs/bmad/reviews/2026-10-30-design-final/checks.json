@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-30",
+  "documents": 35,
+  "local_links_checked": 299,
+  "missing_links": [],
+  "decision_ids": "D-001–D-179 preserved",
+  "discussion_ids": "P-01–P-151 in archive; P-152/P-153 consolidated; P-154 removed",
+  "architecture_invariants": 16,
+  "spine_lint_findings": 0,
+  "diagram": "native JSON and SVG parse; unique IDs; texts compared; rendered visual inspection",
+  "sensitive_pattern_check": "bounded patterns only; no hits",
+  "application_tests": "not run; no implementation",
+  "excalidraw_editor_import": "not tested",
+  "final_source_recheck": "PASS; RGS-01/RGS-02 fixed; DEL-01–03 complete, DEL-06 examples present"
+}

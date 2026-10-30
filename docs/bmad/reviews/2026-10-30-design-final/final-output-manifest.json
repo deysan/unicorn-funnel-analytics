@@ -1,0 +1,251 @@
+{
+  "date": "2026-10-30",
+  "checkpoint": "863b4a4",
+  "scope": "final documentation package; self excluded",
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "06dc2c933237fdd63fa05121d4894c014785c81cda290941b572bdd5aa56317b"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "f295733d1b5ab7493c177324d4bc63660288d00007fcff425fb10bf13c03a94c"
+    },
+    {
+      "path": "docs/ai-worklog.md",
+      "sha256": "bcd78758e0f124b30f19efd29faa97a9ed312a5857d38eadebae8b94d6a7ccdb"
+    },
+    {
+      "path": "docs/architecture-notes.md",
+      "sha256": "cc80bbf82a4bed840e70745958050dfff2bd17bf687c6ffe71499d9edc45fa64"
+    },
+    {
+      "path": "docs/bmad/README.md",
+      "sha256": "f89e97a871995a777d3b39055299dff89cbbb56fff484deed35dbc73d2cc4968"
+    },
+    {
+      "path": "docs/bmad/planning-artifacts/architecture/architecture-Unicorn-2026-10-29/.memlog.md",
+      "sha256": "c37eca4ee7c7aea7bb0b892a65b33dd7c2b9d22ed3798c48f5baf4642b4d40bf"
+    },
+    {
+      "path": "docs/bmad/planning-artifacts/architecture/architecture-Unicorn-2026-10-29/ARCHITECTURE-SPINE.md",
+      "sha256": "9430e4f43dd331d98ae0cb87dcd58d51ac14c1631b0a254231b32fccc3d4b5e4"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29/adversarial.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29/edge-case-hunter.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29/findings.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29/input-manifest.json",
+      "sha256": "b6e8fd8e5dc2660f828a3331fd2596246260970391454c9aade2bb3a6aaeba0f"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29/report.md",
+      "sha256": "3117afc68ceafcdc36343eebb770bd312d9d614b684dafbfcb7d0bce9b6610bc"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-architecture-foundation/adversarial.json",
+      "sha256": "23b51800ab85cebce7763d452083c814c14eb12fe472ae1897bae04590fe5245"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-architecture-foundation/checks.json",
+      "sha256": "8bced625081e15a3196c386761ffe97b286789ba11c00beea49c083a81fd3c49"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-architecture-foundation/edge-case-hunter.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-architecture-foundation/findings.json",
+      "sha256": "6839f7108a33db0e35eafc0e629980783211db3aa1c6ddf4d928d971467b9c41"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-architecture-foundation/input-manifest.json",
+      "sha256": "1630eacdedeea3526b4a571bec52e5cdc4da30d66a364950476538d54301d90d"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-architecture-foundation/recheck-manifest.json",
+      "sha256": "3b71aa75e862aaa864f8025ea723ab2de40aad73e9669fa3b20f60c076b157ec"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-architecture-foundation/recheck.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-architecture-foundation/report.md",
+      "sha256": "9a5970e03607a98e323608bf32785203b1278c826a642c4fd325da8e5ab29b8b"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-architecture-foundation/structure.md",
+      "sha256": "e47d73a2f44180a888607387acc0170f31df6b535a8b37c3dfbca99d9dc54187"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/adversarial.json",
+      "sha256": "973ca5ff8777cb553711f75bbcaf9e709758e7835fe1ef2804591a247c264f0a"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/checks.json",
+      "sha256": "a2e65b2de5467c4f477c0c4ec4ec3f9618fa659438b0b15d0b396501ec8528e3"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/edge-case-hunter.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/findings.json",
+      "sha256": "973ca5ff8777cb553711f75bbcaf9e709758e7835fe1ef2804591a247c264f0a"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/follow-up.md",
+      "sha256": "4c1f29ec3ab99e2e16b13b7f184ed0b7e84582266ee9a273f5d644c86c211de7"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/input-manifest.json",
+      "sha256": "a5b85e968f6bd859de4f84f477bf96b0ffd64eb83622239de6f0bff10deff953"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/post-review-manifest.json",
+      "sha256": "3da72e469a42237fb7f8a907077ef6f11247968b2418d3a63663b2c41681bad3"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/reconcile-source.md",
+      "sha256": "216914e8edafd6eaa8f267d4c9ed371031c6128f799b65706b007ff29261ba6d"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/report.md",
+      "sha256": "329594700cd885b25f5190c49bf16ac14aca1659f48265ee2d45b71c487f94af"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/review-rubric.md",
+      "sha256": "babba2dcc3b1939f3f9dbb20e5273b7cdd8a31eb7f52b750dc883b86c70fa9fa"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/structure.md",
+      "sha256": "50e55bb686527a572e42a3d9cb1ffd524664d54033694eaf43ba6b30b4a8e8d6"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/validation-report.html",
+      "sha256": "4412358a463eaae670a82f777270bde5d46053b6dab80bc1dde186a68f41e1c0"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-29-scenarios/validation-report.md",
+      "sha256": "03da7f5d9689028090112d9f0d2e75e1e4aba04499057105ef41cb2067382cb5"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/checks.json",
+      "sha256": "620676e7cb1e79de015b6b6011f33b0880da5c16da64df8829bdc81d696f658e"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/editorial-final.md",
+      "sha256": "29f483defd9b2037896af10352df0805ff3a67de076f2be4e33bc2248eec0cd0"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/final-input-manifest.json",
+      "sha256": "b0dc87892cf4af878c14c69c104acb87a6ead5e7a1c0ac10018264e163af252d"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/final-recheck.md",
+      "sha256": "77ca2a4be37f85534a2c461f035641c7cacd36c568a355f76872ea514ca6b560"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/gate-adversarial.md",
+      "sha256": "0122178c18ac35ca8e91241e252c342d5e87ea1f472fdbb623d0038e5c5c2162"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/gate-rubric-source.md",
+      "sha256": "228ab9a2a4e4262c1358598c73666078425c32f48c715f73b02ca41a2f014c88"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/gate-technology.md",
+      "sha256": "825d3754ffd7542154347162d007f78f978b069ce313159528c787848275df23"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/initial-adversarial.json",
+      "sha256": "ec26ec36c7842e740463dfb57dd3cc626d621d550687afe41b8dad08b31f7759"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/initial-edge-cases.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/initial-input-manifest.json",
+      "sha256": "eb56070c8108a1d73398e3bc2ff68151460ae5a336e17b731ea336d9dcfab042"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/initial-structure.md",
+      "sha256": "a2901cd0f6d2864433e87cea59189d5a299fff575a28749b972590418ae54fc3"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/platform-evidence.md",
+      "sha256": "d9312f7e23adba69735119f3bd23028ffbf158a869b51eebf129e350cab64a04"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/report.md",
+      "sha256": "a4b89790361b4ae86df402d8f5a400ea9d95682a494f6417a30a3899952eddb9"
+    },
+    {
+      "path": "docs/capacity-and-delivery.md",
+      "sha256": "6bdacfeec2c18339b0e11530b5e881f786a6f2eebe4e87c18d3a96266618470c"
+    },
+    {
+      "path": "docs/cloudflare-free-tier.md",
+      "sha256": "3c8ae68ce1f261589c134d5b284d4f892b4152dc3f7be0cbe6efd9e4bd2670ff"
+    },
+    {
+      "path": "docs/decisions.md",
+      "sha256": "88b918362f2e881bfb3b43c6cb328a6b75d185685ec88099d17a38f12bbac164"
+    },
+    {
+      "path": "docs/design-scope-check.md",
+      "sha256": "0b2c754a0969257ff35f2d246dac82a99224055d39f07b8886a84e6357244f88"
+    },
+    {
+      "path": "docs/diagrams/system-context.excalidraw",
+      "sha256": "f2e386927810a90d4bddc9075678eefd05f0c9b58d9a1823f25a2ad8bbd3dbc4"
+    },
+    {
+      "path": "docs/diagrams/system-context.svg",
+      "sha256": "34c9c2402ac1e1d6a1dda9d2892e3914aa02067fad85684fb459751a613a61a0"
+    },
+    {
+      "path": "docs/implementation-plan.md",
+      "sha256": "9e7aeeb3d4a87f18ad7fa8d6b5faaaf8f4a430e281de4ed4b1bfe94c76b4be8f"
+    },
+    {
+      "path": "docs/plan-history.md",
+      "sha256": "be4f08a8617913e58534276a5bb5bd5e75eee3a081ea89a44e0b9b56b7011a59"
+    },
+    {
+      "path": "docs/plan.md",
+      "sha256": "1988fd9d8eeebf350e02d0a48e1d1e670f72fd4e5aa79c737d3fddee81ca1e4c"
+    },
+    {
+      "path": "docs/requirements-audit.md",
+      "sha256": "6f45a29963957e4c88bca7b2db4c57216bc90cdb0115d521f13dab13250a687c"
+    },
+    {
+      "path": "docs/requirements.md",
+      "sha256": "c0833fd87ae549f0af93d6b03d25575849f6d5d4a667c5e0086867aea323c300"
+    },
+    {
+      "path": "docs/scenarios-audit.md",
+      "sha256": "69e6ea2385a4857ced34932acf75189726a92525ae22ebf46cc9030ccca759e4"
+    },
+    {
+      "path": "docs/scenarios.md",
+      "sha256": "bf01ed98d90d8908599eb411717a07d84d3a17e26d0a967250ad7a5a9d0512b3"
+    },
+    {
+      "path": "docs/system-design.md",
+      "sha256": "1778ba5b9f9e1549cb64314cef20f929e1c46589de74228624252ca9fc72049b"
+    }
+  ]
+}

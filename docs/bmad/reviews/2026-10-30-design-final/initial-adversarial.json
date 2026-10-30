@@ -1,0 +1,9 @@
+[
+  {
+    "lens": "adversarial",
+    "location": "initial snapshot docs/system-design.md:717, P-15; D-168/P-142",
+    "trigger_condition": "Розробник записує значення вподобання у answer_confirmed за раннім P-15, хоча D-168 це забороняє.",
+    "guard_snippet": "Уточнити P-15 за D-168: лише факт підтвердження й службові поля/посилання, поточні значення — в users.",
+    "potential_consequence": "Зайві копії вподобань у журналі/експорті та взаємовиключні контракти."
+  }
+]

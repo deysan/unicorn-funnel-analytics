@@ -1,0 +1,71 @@
+{
+  "phase": "before consolidation",
+  "commit": "863b4a47c1dfb2129e7ba92084c467037c2acd1e",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "f295733d1b5ab7493c177324d4bc63660288d00007fcff425fb10bf13c03a94c",
+      "bytes": 6497
+    },
+    {
+      "path": "README.md",
+      "sha256": "f44ab4e7c4377c965c2a012c6ee7f60e18885e9913d1b315cddb83ece357c074",
+      "bytes": 3821
+    },
+    {
+      "path": "docs/requirements.md",
+      "sha256": "b6dcb827ddec0b726a08d0fbc37ded72a28e8c42403b186e37da82374daa7454",
+      "bytes": 39965
+    },
+    {
+      "path": "docs/decisions.md",
+      "sha256": "0f1d54d8296b11dc7522c4310570232d3a01cafafde6eec9a6bd1f04cea50bae",
+      "bytes": 427098
+    },
+    {
+      "path": "docs/system-design.md",
+      "sha256": "9944351093a1c225c59eec9ec42ee581e5832d99348c4a074e19d811e4ae636b",
+      "bytes": 661599
+    },
+    {
+      "path": "docs/scenarios.md",
+      "sha256": "bf01ed98d90d8908599eb411717a07d84d3a17e26d0a967250ad7a5a9d0512b3",
+      "bytes": 91327
+    },
+    {
+      "path": "docs/scenarios-audit.md",
+      "sha256": "42729856b40524d50ebd1e7b6242c769c266fda5fb7e6d80b93f736afd5cee4f",
+      "bytes": 13659
+    },
+    {
+      "path": "docs/cloudflare-free-tier.md",
+      "sha256": "bf9c6ce10a92b1f914245155f0bf6397a1c4420a1d860c0b23b0fb5a82a6a698",
+      "bytes": 12444
+    },
+    {
+      "path": "docs/design-scope-check.md",
+      "sha256": "fcc39d303be6c62cbbc1659a56ae8832e02734e566487c1c941eb3d8046a9d7d",
+      "bytes": 9338
+    },
+    {
+      "path": "docs/plan.md",
+      "sha256": "439971995cce1f9cee6825ded8e2c604b2b5c904c07299262166325ac75db8a5",
+      "bytes": 37858
+    },
+    {
+      "path": "docs/bmad/planning-artifacts/architecture/architecture-Unicorn-2026-10-29/ARCHITECTURE-SPINE.md",
+      "sha256": "4b3f3153b8accefa74e5b60e957686366726498326593e87374de15b6a7350b8",
+      "bytes": 15352
+    },
+    {
+      "path": "docs/bmad/planning-artifacts/architecture/architecture-Unicorn-2026-10-29/.memlog.md",
+      "sha256": "524174535f10e7e56d6112db3258414c9329c53073fc03fcf83825e113991ea3",
+      "bytes": 185284
+    },
+    {
+      "path": "docs/diagrams/system-context.excalidraw",
+      "sha256": "e0433609bf0f4eb2a01f6a5439342f6f86bdfe6609182295d6a9344dd821b522",
+      "bytes": 43070
+    }
+  ]
+}

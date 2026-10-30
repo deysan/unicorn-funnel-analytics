@@ -1,0 +1,66 @@
+{
+  "phase": "final reviewer gate, pass 1",
+  "source_sha256": "1fa6870cc45fc9243320406f9b29400e3f1483f2f8d0690a978925a4f6816055",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "f295733d1b5ab7493c177324d4bc63660288d00007fcff425fb10bf13c03a94c"
+    },
+    {
+      "path": "README.md",
+      "sha256": "ad1d916ee5a354617063d7bc3f3ad459344259da2e439ea390cf4db1a42c95e8"
+    },
+    {
+      "path": "docs/requirements.md",
+      "sha256": "fe968b5bbb02fbe6812b62a0668fd248faedf52d8297bfb6ee917f558ca17b07"
+    },
+    {
+      "path": "docs/decisions.md",
+      "sha256": "c9aa42a0e6d3ec72747021730d0875ba1aef5e7dc8ee695fa073d23c4aa1c15e"
+    },
+    {
+      "path": "docs/scenarios.md",
+      "sha256": "bf01ed98d90d8908599eb411717a07d84d3a17e26d0a967250ad7a5a9d0512b3"
+    },
+    {
+      "path": "docs/architecture-notes.md",
+      "sha256": "cc80bbf82a4bed840e70745958050dfff2bd17bf687c6ffe71499d9edc45fa64"
+    },
+    {
+      "path": "docs/system-design.md",
+      "sha256": "6ce24776d855863746d862d2f834f25ce6431972ca33752e40994e71bb69a6b6"
+    },
+    {
+      "path": "docs/implementation-plan.md",
+      "sha256": "9e7aeeb3d4a87f18ad7fa8d6b5faaaf8f4a430e281de4ed4b1bfe94c76b4be8f"
+    },
+    {
+      "path": "docs/capacity-and-delivery.md",
+      "sha256": "6bdacfeec2c18339b0e11530b5e881f786a6f2eebe4e87c18d3a96266618470c"
+    },
+    {
+      "path": "docs/design-scope-check.md",
+      "sha256": "38139b40afb7834e249cf9b7811530a80b7cf47e38f4f863542e8e805c65cdec"
+    },
+    {
+      "path": "docs/plan.md",
+      "sha256": "bac5fdc4c0edcb1ef0408a5b0850d3cc6596b1beddfb3366d8764e1eb3ec8c89"
+    },
+    {
+      "path": "docs/bmad/planning-artifacts/architecture/architecture-Unicorn-2026-10-29/ARCHITECTURE-SPINE.md",
+      "sha256": "bee64f3588194a15942c0b00e4d5e556fcd9ef200a258ca4aa9483a6f3c4d244"
+    },
+    {
+      "path": "docs/bmad/reviews/2026-10-30-design-final/platform-evidence.md",
+      "sha256": "d9312f7e23adba69735119f3bd23028ffbf158a869b51eebf129e350cab64a04"
+    },
+    {
+      "path": "docs/diagrams/system-context.excalidraw",
+      "sha256": "f2e386927810a90d4bddc9075678eefd05f0c9b58d9a1823f25a2ad8bbd3dbc4"
+    },
+    {
+      "path": "docs/diagrams/system-context.svg",
+      "sha256": "34c9c2402ac1e1d6a1dda9d2892e3914aa02067fad85684fb459751a613a61a0"
+    }
+  ]
+}
