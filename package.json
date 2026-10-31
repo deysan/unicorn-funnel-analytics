@@ -3,16 +3,23 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": "24.22.2", "npm": "11.19.1" },
+  "engines": {
+    "node": "24.22.2",
+    "npm": "11.19.1"
+  },
   "packageManager": "npm@11.19.1",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "types": "wrangler types src/server/worker-configuration.d.ts",
-    "typecheck": "npm run types && tsc -p tsconfig.client.json && tsc -p tsconfig.server.json && tsc -p tsconfig.shared.json && tsc -p tsconfig.node.json",
+    "typecheck": "npm run types && tsc -p tsconfig.client.json && tsc -p tsconfig.server.json && tsc -p tsconfig.shared.json && tsc -p tsconfig.node.json && tsc -p tsconfig.tests-worker.json && tsc -p tsconfig.tests-browser.json",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test:smoke": "playwright test",
-    "check": "npm run typecheck && npm run build && npm run test:smoke"
+    "check": "npm run typecheck && npm test && npm run build && npm run test:smoke",
+    "test": "vitest run",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
+    "test:worker": "vitest run --config vitest.worker.config.ts",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "hono": "4.13.14",
@@ -22,6 +29,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.66.0",
+    "@cloudflare/vitest-plugin": "1.4.11",
     "@playwright/test": "1.64.1",
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",
@@ -29,6 +37,7 @@
     "@vitejs/plugin-react": "6.1.2",
     "typescript": "7.0.2",
     "vite": "8.3.5",
+    "vitest": "5.0.5",
     "wrangler": "4.156.0"
   }
 }

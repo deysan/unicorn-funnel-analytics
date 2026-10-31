@@ -25,8 +25,8 @@ shell потрібно виконати `nvm use`. Гілка Node 24 підтр
 | zod | 4.6.7 | [registry](https://registry.npmjs.org/zod/4.6.7) |
 | wrangler | 4.156.0 | [registry](https://registry.npmjs.org/wrangler/4.156.0) |
 | @cloudflare/vite-plugin | 1.66.0 | [registry](https://registry.npmjs.org/@cloudflare/vite-plugin/1.66.0) |
-| vitest (наступна частина M0, ще не встановлено) | 5.0.5 | [registry](https://registry.npmjs.org/vitest/5.0.5) |
-| @cloudflare/vitest-plugin (ще не встановлено) | 1.4.11 | [registry](https://registry.npmjs.org/@cloudflare/vitest-plugin/1.4.11) |
+| vitest | 5.0.5 | [registry](https://registry.npmjs.org/vitest/5.0.5) |
+| @cloudflare/vitest-plugin | 1.4.11 | [registry](https://registry.npmjs.org/@cloudflare/vitest-plugin/1.4.11) |
 | @playwright/test | 1.64.1 | [registry](https://registry.npmjs.org/@playwright/test/1.64.1) |
 | @types/react / @types/react-dom | 19.3.0 / 19.3.0 | [React](https://registry.npmjs.org/@types/react/19.3.0), [DOM](https://registry.npmjs.org/@types/react-dom/19.3.0) |
 
@@ -55,12 +55,19 @@ Miniflare beta та unenv rc; стабільні номери прямих па�
 ## Фактичний результат
 
 - `npm ci` пройшов; SHA-256 lockfile до/після однаковий:
-  `a19a3d88eb1e45813d10ac488fc416488016440f46979074712174e5d6da2513`.
+  `e2089e1b01eaf3ae2ab01965623652818724f71f085784e8898bd20bed0bce1b`.
 - `npm run typecheck` і `npm run build` пройшли з генерованими типами
   Worker; використано схему встановленого Wrangler і сигнатури D1.
-- `npm run test:smoke`: **4/4 Chromium тести** проти preview збірки —
+- `npm run test:unit`: **6/6** перевірок shared-контракту у Node.
+- `npm run test:worker`: **7/7** перевірок HTTP/D1 у workerd: успішний
+  handler, 404, контрольований збій binding/503, SQL із параметрами,
+  очищення всередині файла та ізоляція двох файлів.
+- `npm test`: **13/13** через спільну конфігурацію projects.
+- `npm run test:smoke`: **21/21** проти preview збірки — 5 Chromium і
+  по 4 Firefox/WebKit/mobile-Chromium/mobile-WebKit:
   справжній запит UI → Worker → D1, JSON 404 для невідомого API,
-  мережевий збій із ручним повтором, відхилення невалідної відповіді.
+  мережевий збій із ручним повтором, відхилення невалідної відповіді,
+  доступна кнопка й відсутність горизонтального переповнення.
 - `npm run dev` також перевірено браузером: результат D1 = 1.
   Оглянуто desktop 1100×760 і mobile 375×812; переповнення по ширині немає.
 - Прочитано імпорти client/server/shared; shared не залежить від платформних
@@ -78,9 +85,63 @@ npm повідомив про install scripts esbuild/workerd/fsevents, не п�
 Команди відтворення — [README](../README.md). Cloudflare login, хмарні
 ресурси та секрети не потрібні. D1 працює локально (`remote: false`),
 бізнес-таблиць немає. Технічний маршрут не замінює майбутній захищений звіт.
-Повні рівні Vitest, браузерна матриця й CI залишаються наступними частинами M0.
+Vitest налаштований для обох рівнів, але бізнес-правила й транзакційні
+сценарії перевірятимуться разом з їх реалізацією. Погоджені п’ять
+браузерних конфігурацій налаштовано; це покриття технічного каркаса,
+не майбутніх бізнес-сценаріїв. Мобільні пресети — емуляція, не пристрої.
+
+Тестові фікстури не потрапили в dev D1: read-only перевірка 7 локальних
+SQLite-файлів не знайшла `__test_probe` або `__file_isolation`. Плагін
+ізолює сховище на файл; усередині файла `beforeEach` очищує лише тестову
+таблицю. Загальний `npm run check` пройшов після `npm ci`.
+За дорученням власника фіксація відбувається після завершення всього
+M0, M1 тощо. Існуючий коміт каркаса не переписували.
+
+## Браузери та CI: перевірка 2026-10-31
+
+- `CI=true npm run check`: typecheck, **13 Vitest**, build і **21 Playwright**
+  успішні на macOS 27.0.1 arm64. Немає retries/skip; browser workers = 1.
+- Бінарні версії Playwright 1.64.1: Chromium 156, Firefox 157, WebKit 27.2.
+- Firefox спочатку завершувався до тестів через `Could not find profile folder`.
+  Виявлено відповідний [upstream issue](https://github.com/microsoft/playwright/issues/42768).
+  Ізоляція через новий системний home запустила тести, але дала помилку очищення;
+  цей варіант прибрано. Остаточна fixture задає лише `MOZ_APP_DATA` та
+  `MOZ_LOCAL_APP_DATA` для Firefox на macOS, за рекомендацією
+  [Mozilla](https://bugzilla.mozilla.org/show_bug.cgi?id=2078511).
+  Тести й teardown пройшли; особисті профілі/системні дозволи не змінювали.
+- Браузерний TypeScript має окремий конфіг із DOM для `page.evaluate`.
+- Workflow для стандартного Ubuntu 24.04 перевірено **actionlint 1.7.12**:
+  exit 0, без зауважень. SHA-256 офіційного завантаження actionlint звірено.
+- `actions/checkout` 7.0.1 і `actions/setup-node` 7.1.0 перевірено за
+  офіційними release/tag і зафіксовано повними SHA в workflow.
+- Read-only перевірка GitHub API/UI: приватний репозиторій, Actions
+  доступні; Free, включена квота доступна, платне використання Actions
+  зупинене нульовим бюджетом. Billing-налаштування не змінювали.
+  Особисті деталі обліку не зберігаються в Git.
+- CI: PR/push у master зі змінами поза docs/Markdown, ручний запуск,
+  read-only token, без збереження git credentials, скасування застарілих
+  run; job 15 хвилин, браузери 5 хвилин, test.only заборонено.
+  Кеш/upload артефактів вимкнені; діагностика в логах, SHA — фактичний checkout.
+- **GitHub Actions ще не запускався**: workflow не запушено. Перевірку Linux
+  потрібно підтвердити першим run; локальний результат цього не доводить.
+  Cloudflare demo/deploy/binding лишаються окремою передумовою M6.
+- Незалежне рев’ю BMAD Build браузерного/CI-блоку не знайшло доказових
+  дефектів; рев’юер читав код і перевірив diff, тестів повторно не запускав.
+
+Джерела CI, перевірені 2026-10-31:
+[Playwright CI](https://playwright.dev/docs/ci-intro),
+[GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions),
+[checkout 7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1),
+[setup-node 7.1.0](https://github.com/actions/setup-node/releases/tag/v7.1.0),
+[actionlint 1.7.12](https://github.com/rhysd/actionlint/releases/tag/v1.7.12).
 
 Первинні джерела, прочитані 2026-10-31:
 [Cloudflare Vite tutorial](https://developers.cloudflare.com/workers/vite-plugin/tutorial/),
 [D1 local development](https://developers.cloudflare.com/d1/best-practices/local-development/),
 [Workers best practices](https://developers.cloudflare.com/workers/best-practices/workers-best-practices/).
+
+Джерела налаштування тестів (2026-10-31):
+[Vitest integration](https://developers.cloudflare.com/workers/testing/vitest-integration/),
+[початок роботи](https://developers.cloudflare.com/workers/testing/vitest-integration/write-your-first-test/),
+[ізоляція](https://developers.cloudflare.com/workers/testing/vitest-integration/isolation-and-concurrency/),
+[Vitest projects](https://vitest.dev/guide/projects).

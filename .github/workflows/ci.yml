@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+    paths-ignore: ['docs/**', '**/*.md']
+  pull_request:
+    branches: [master]
+    paths-ignore: ['docs/**', '**/*.md']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Перевірити версії середовища
+        run: |
+          node --version
+          test "$(npm --version)" = "11.19.1"
+          git rev-parse HEAD
+      - name: Встановити залежності за lockfile
+        run: npm ci
+      - name: Встановити браузери та системні бібліотеки
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Перевірити типи, Vitest, збірку та браузерну матрицю
+        run: npm run check

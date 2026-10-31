@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
-test('UI отримує результат справжнього локального запиту Worker → D1', async ({ page }) => {
+test('UI отримує результат справжнього локального запиту Worker → D1', { tag: '@critical' }, async ({ page }) => {
   await page.goto('/');
   const responsePromise = page.waitForResponse('/api/v1/health');
   await page.getByRole('button', { name: 'Перевірити з’єднання' }).click();
@@ -19,7 +19,7 @@ test('невідомий API повертає JSON 404, включно з нав
   expect(await response.json()).toEqual({ code: 'not_found', message: 'Маршрут не знайдено.', retryable: false });
 });
 
-test('мережева помилка дозволяє ручний повтор', async ({ page }) => {
+test('мережева помилка дозволяє ручний повтор', { tag: '@critical' }, async ({ page }) => {
   await page.goto('/');
   await page.route('**/api/v1/health', (route) => route.abort());
   await page.getByRole('button').click();
@@ -29,9 +29,19 @@ test('мережева помилка дозволяє ручний повтор
   await expect(page.getByRole('status')).toContainText('З’єднання працює');
 });
 
-test('невалідна відповідь не видається за успіх', async ({ page }) => {
+test('невалідна відповідь не видається за успіх', { tag: '@critical' }, async ({ page }) => {
   await page.goto('/');
   await page.route('**/api/v1/health', (route) => route.fulfill({ json: { status: 'ok' } }));
   await page.getByRole('button').click();
   await expect(page.getByRole('status')).toContainText('Не вдалося');
+});
+
+test('кнопка доступна, сторінка не потребує горизонтального прокручування', { tag: '@critical' }, async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Перевірити з’єднання' })).toBeInViewport({ ratio: 1 });
+  const dimensions = await page.evaluate(() => ({
+    contentWidth: document.documentElement.scrollWidth,
+    viewportWidth: document.documentElement.clientWidth,
+  }));
+  expect(dimensions.contentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
 });
