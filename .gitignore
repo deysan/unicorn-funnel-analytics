@@ -9,6 +9,9 @@ node_modules/
 .wrangler/
 dist/
 coverage/
+test-results/
+playwright-report/
+src/server/worker-configuration.d.ts
 *.log
 
 # BMAD: generated runtime/skills are reproducible; keep project overrides.
