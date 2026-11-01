@@ -2,6 +2,7 @@ import { availableFrom, DAY, filtersSchema, funnelSchema, reportQuestions, repor
 import { getOfferCatalog } from '../offers/catalog';
 import { HttpFailure } from '../http/security';
 import { BUDGETS } from '../storage/capacity';
+import { receiverMode } from '../delivery/contract';
 const clock = "CAST((julianday('now') - 2440587.5) * 86400000 AS INTEGER)";
 const unique = (source: string, condition: string) => `(SELECT COUNT(DISTINCT user_id) FROM ${source} WHERE ${condition})`;
 const pair = (numerator: number, denominator: number) => ({ numerator, denominator });
@@ -73,20 +74,48 @@ export async function readFilters(db: D1Database) {
   return filtersSchema.parse({ updated_at: rows[0]?.updated_at, catalog_version: catalog.version, prelands: rows.filter((r) => r.kind === 'preland').map((r) => r.id),
     offers: [...offers.values(), ...historical.map((r) => ({ id: r.id, status: 'historical' }))].sort((a, b) => a.id.localeCompare(b.id)) });
 }
-export async function readStatus(db: D1Database) {
-  const row = await db.prepare(`SELECT ${clock} AS updated_at, s.*,
+const safeDeliveryCodes = new Set(['invalid_snapshot', 'receiver_unavailable', 'timeout', 'invalid_ack', 'missing_ack', 'retry', 'conflict']);
+const safeCronCodes = new Set(['status_write_failed', 'integrity_paused', 'undelivered_read_failed', 'hourly_mismatch', 'hourly_read_failed', 'hourly_claim_unknown', 'cleanup_failed', 'delivery_integrity_paused', 'delivery_reconcile_failed', 'delivery_claim_unknown', 'delivery_ack_unknown', 'delivery_invalid_mode', 'delivery_status_failed', 'delivery_items_failed']);
+export async function readStatus(db: D1Database, mode: unknown, testNow?: number) {
+  const receiver_mode = receiverMode(mode);
+  const row = await db.prepare(`SELECT COALESCE(?, ${clock}) AS updated_at, s.*, m.*,
     (SELECT COUNT(*) FROM event_delivery WHERE status = 'pending') AS pending,
     (SELECT COUNT(*) FROM event_delivery WHERE status = 'in_flight') AS in_flight,
     (SELECT COUNT(*) FROM event_delivery WHERE status = 'delivered') AS delivered,
+    (SELECT MIN(e.received_at) FROM event_delivery d JOIN events e ON e.event_id = d.event_id WHERE d.status != 'delivered') AS oldest_at,
+    (SELECT json_group_array(json_object('code', last_error_code, 'count', n)) FROM
+      (SELECT last_error_code, COUNT(*) AS n FROM event_delivery WHERE last_error_code IS NOT NULL AND status != 'delivered' GROUP BY last_error_code)) AS delivery_errors,
     (SELECT json_group_array(json_object('key', budget_key, 'used', used_count, 'paused', capacity_paused)) FROM capacity_control) AS budgets
-    FROM system_control s WHERE singleton_id = 1`).first<{updated_at: number; integrity_paused: number; history_unverified: number; history_available_from: number | null; pending: number; in_flight: number; delivered: number; budgets: string}>();
+    FROM system_control s JOIN maintenance_control m ON m.singleton_id = s.singleton_id WHERE s.singleton_id = 1`).bind(testNow ?? null).first<{
+      updated_at: number; integrity_paused: number; history_unverified: number; history_available_from: number | null;
+      pending: number; in_flight: number; delivered: number; oldest_at: number | null; delivery_errors: string; budgets: string;
+      cron_first_attempt_at: number | null; cron_attempt_at: number | null; cron_success_at: number | null; cron_result: string | null; cron_errors_json: string;
+      cleanup_at: number | null; cleanup_json: string | null; last_ack_at: number | null;
+      reconcile_attempt_at: number | null; reconcile_read_at: number | null; reconcile_status: string | null; reconcile_json: string | null;
+    }>();
   if (!row || ![0, 1].includes(row.integrity_paused) || ![0, 1].includes(row.history_unverified)) throw new Error('control_invalid');
   const budgets = JSON.parse(row.budgets) as {key: keyof typeof BUDGETS; used: number; paused: number}[];
   if (budgets.length !== 4 || new Set(budgets.map((b) => b.key)).size !== 4 || budgets.some((b) => !Object.hasOwn(BUDGETS, b.key) || ![0, 1].includes(b.paused) || b.used > BUDGETS[b.key].limit)) throw new Error('control_invalid');
   let history_metadata: 'missing' | 'confirmed' | 'invalid' = row.history_available_from === null ? 'missing' : 'confirmed';
   if (row.history_available_from !== null) try { availableFrom(row.history_available_from, row.updated_at); } catch { history_metadata = 'invalid'; }
-  return reportStatusSchema.parse({ updated_at: row.updated_at, delivery: { pending: row.pending, in_flight: row.in_flight, delivered: row.delivered },
-    budgets: budgets.map((b) => ({ key: b.key, used: b.used, limit: BUDGETS[b.key].limit, paused: b.paused === 1 })),
+  const errors = new Map<string, number>();
+  for (const entry of JSON.parse(row.delivery_errors) as {code: string; count: number}[]) {
+    const code = safeDeliveryCodes.has(entry.code) ? entry.code : 'unknown_error'; errors.set(code, (errors.get(code) ?? 0) + entry.count);
+  }
+  const oldest_age_ms = row.oldest_at === null ? null : Math.max(0, row.updated_at - row.oldest_at);
+  const cronBaseline = row.cron_success_at ?? row.cron_first_attempt_at;
+  return reportStatusSchema.parse({ updated_at: row.updated_at, receiver_mode, delivery: { pending: row.pending, in_flight: row.in_flight, delivered: row.delivered,
+      oldest_age_ms, delayed: oldest_age_ms !== null && oldest_age_ms > 900_000, last_ack_at: row.last_ack_at,
+      errors: [...errors].map(([code, count]) => ({ code, count })) },
+    budgets: budgets.map((b) => ({ key: b.key, used: b.used, limit: BUDGETS[b.key].limit, paused: b.paused === 1,
+      alert: b.used / BUDGETS[b.key].limit >= 0.95 ? 'critical' : b.used / BUDGETS[b.key].limit >= 0.8 ? 'warning' : 'normal' })),
     integrity_paused: row.integrity_paused === 1, history_unverified: row.history_unverified === 1, history_metadata,
-    cron: 'not_implemented', export: 'not_implemented' });
+    pause_reason: row.integrity_paused === 1 ? 'integrity' : budgets.some((b) => b.paused === 1) ? 'capacity' : null,
+    cron: { status: row.cron_result ?? 'unknown', last_attempt_at: row.cron_attempt_at, last_success_at: row.cron_success_at,
+      stale: cronBaseline === null ? null : row.updated_at - cronBaseline > 300_000,
+      errors: (JSON.parse(row.cron_errors_json) as string[]).map((code) => safeCronCodes.has(code) ? code : 'unknown_error') },
+    cleanup: { at: row.cleanup_at, phases: row.cleanup_json === null ? null : JSON.parse(row.cleanup_json) },
+    reconciliation: { status: row.reconcile_status ?? 'unknown', attempt_at: row.reconcile_attempt_at, read_at: row.reconcile_read_at,
+      summary: row.reconcile_json === null ? null : JSON.parse(row.reconcile_json) },
+  });
 }

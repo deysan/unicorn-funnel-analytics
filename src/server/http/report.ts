@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { parseReportQuery } from '../../shared/report';
 import { readFilters, readFunnel, readStatus } from '../report/read';
 import { decodeSecret, HttpFailure, ipKey, limit } from './security';
-export type ReportBindings = Pick<Env, 'DB' | 'LOCAL_RUNTIME' | 'REPORT_IP_LIMITER' | 'REPORT_LIMITER' | 'ASSETS'>
+export type ReportBindings = Pick<Env, 'DB' | 'LOCAL_RUNTIME' | 'REPORT_IP_LIMITER' | 'REPORT_LIMITER' | 'ASSETS' | 'MOCK_RECEIVER_MODE'>
   & Partial<Pick<Env, 'IP_HMAC_SECRET' | 'REPORT_USERNAME' | 'REPORT_PASSWORD'>>;
 export function reportIdentity(request: Request, env: ReportBindings) {
   const username = env.REPORT_USERNAME;
@@ -53,7 +53,7 @@ report.get('/api/v1/report/funnel', async (c) => {
 });
 report.get('/api/v1/report/status', async (c) => {
   if (new URL(c.req.url).searchParams.size) throw new HttpFailure('validation_failed', 400);
-  return c.json(await readStatus(c.env.DB));
+  return c.json(await readStatus(c.env.DB, c.env.MOCK_RECEIVER_MODE));
 });
 report.get('/api/v1/report/filters', async (c) => {
   if (new URL(c.req.url).searchParams.size) throw new HttpFailure('validation_failed', 400);

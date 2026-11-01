@@ -56,10 +56,21 @@ export function Report() {
       </section><p>Конверсії включають подальші результати групи, також після кінця періоду. Унікальних користувачів між оферами чи прелендами не підсумовуємо.</p>
     </div>}
     <section className="card report-section"><h2>Технічний стан</h2>{state.statusError && <p className="error">{state.statusError}</p>}{state.status && <>
+      <p>Режим імітатора поточного обробника: {state.status.receiver_mode}. Попередні спроби можуть ще завершуватися в іншому режимі.</p>
       <p>Оновлено: {time(state.status.updated_at)}</p><p>Доставка: очікують {state.status.delivery.pending} · у роботі {state.status.delivery.in_flight} · доставлено {state.status.delivery.delivered}</p>
-      <ul>{state.status.budgets.map((b) => <li key={b.key}>{b.key}: {b.used} / {b.limit}{b.paused ? ' · призупинено' : ''}</li>)}</ul>
+      <ul>{state.status.budgets.map((b) => <li key={b.key}>{b.key}: {b.used} / {b.limit}{b.alert === 'critical' ? ' · критично ≥95%' : b.alert === 'warning' ? ' · увага ≥80%' : ''}{b.paused ? ' · призупинено' : ''}</li>)}</ul>
       <p>Цілісність: {state.status.integrity_paused ? 'пауза' : 'без паузи'} · Історія: {state.status.history_unverified ? 'не перевірена' : state.status.history_metadata === 'confirmed' ? 'межа підтверджена' : 'метадані відсутні або некоректні'}</p>
-      <p>Cron та експорт ще не реалізовані. Звіт нічого не надсилає й не поновлює профіль.</p>
+      <p>Причина паузи: {state.status.pause_reason === 'integrity' ? 'порушення цілісності' : state.status.pause_reason === 'capacity' ? 'місткість' : 'немає'}</p>
+      <p>Cron: {state.status.cron.status === 'unknown' ? 'ще немає даних' : state.status.cron.status === 'complete' ? 'успішний запуск' : state.status.cron.status === 'running' ? 'у роботі' : 'часткова невдача'}{state.status.cron.stale ? ' · понад 5 хв без свіжого успіху або спроби' : ''}</p>
+      <p>Остання спроба Cron: {state.status.cron.last_attempt_at === null ? 'невідомо' : time(state.status.cron.last_attempt_at)} · Успіх: {state.status.cron.last_success_at === null ? 'невідомо' : time(state.status.cron.last_success_at)}</p>
+      <p>Останній ACK: {state.status.delivery.last_ack_at === null ? 'ще немає' : time(state.status.delivery.last_ack_at)} · Найстаріша недоставлена: {state.status.delivery.oldest_age_ms === null ? 'немає' : `${Math.floor(state.status.delivery.oldest_age_ms / 60_000)} хв`}{state.status.delivery.delayed ? ' · затримка понад 15 хв' : ''}</p>
+      {!!state.status.cron.errors.length && <p className="error">Помилки запуску: {state.status.cron.errors.join(', ')}</p>}
+      {!!state.status.delivery.errors.length && <ul>{state.status.delivery.errors.map((e) => <li key={e.code}>{e.code}: {e.count}</li>)}</ul>}
+      <p>Очищення: {state.status.cleanup.at === null ? 'ще немає даних' : time(state.status.cleanup.at)}</p>
+      {state.status.cleanup.phases && <ul>{Object.entries(state.status.cleanup.phases).map(([name, p]) => <li key={name}>{name}: змінено {p.changed}, пропущено {p.skipped}{p.has_more ? ' · є наступна порція' : ''}{p.error ? ' · помилка очищення' : ''}</li>)}</ul>}
+      <p>Щогодинна звірка: {state.status.reconciliation.status} · Спроба: {state.status.reconciliation.attempt_at === null ? 'невідомо' : time(state.status.reconciliation.attempt_at)} · Зріз: {state.status.reconciliation.read_at === null ? 'невідомо' : time(state.status.reconciliation.read_at)}</p>
+      {state.status.reconciliation.summary && <ul>{Object.entries(state.status.reconciliation.summary).map(([name, count]) => <li key={name}>{name}: {count === null ? 'невідомо' : count}</li>)}</ul>}
+      <p>Технічний стан охоплює всю базу, незалежно від фільтрів. Звіт нічого не надсилає й не поновлює профіль.</p>
     </>}</section>
     <footer>Автооновлення кожні 60 секунд після завершення попередньої спроби, лише у видимій вкладці.</footer>
   </main>;

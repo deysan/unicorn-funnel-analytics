@@ -738,7 +738,7 @@
   Production-код у цьому підкроці не змінювався.
 - **Перевірка:** SQL CHECK правильно відхилив первинну некоректну
   expired-фікстуру; часові дані фікстури виправлено. Незалежний reviewer
-  повернув []. Root повний check — exit0: 440 Vitest, 79 Playwright,
+  повернув []. Root повний check — exit 0: 440 Vitest, 79 Playwright,
   typecheck/build, без test retries. Dev-база незмінна; без commit/push/deploy.
 - **Артефакти:** [матриця SC-13](m3-sc13.md),
   [специфікація](bmad/implementation-artifacts/spec-m3-sc13.md).
@@ -774,3 +774,162 @@
 - **Артефакти:** [аудит і матриця](bmad/reviews/2026-11-01-m3/report.md),
   [findings/triage](bmad/reviews/2026-11-01-m3/findings.json),
   [стан M3](m3-recovery.md).
+
+## AI-029 — перший підкрок M4: фонова доставка
+
+2026-11-01.
+
+- **Доручення людини:** реалізувати Cron та стійку доставку в імітатор
+  за погодженими рішеннями, без коміту; cleanup залишити наступному підкроку.
+- **Пропозиція:** окремі фази звірки, claim, commit приймача та ACK;
+  строгі versioned контракти, SQL integrity-guards у кожній мутаційній
+  транзакції, changes()-облік лише фактичних delivered, локальні fault injection.
+- **Рішення людини:** реалізацію цього підкроку дозволено; нових бізнес-рішень
+  чи схвалень агент не приписує. Межі — [специфікація](bmad/implementation-artifacts/spec-m4-delivery.md).
+- **Фактична робота:** delivery contract/receiver/executor, scheduled handler,
+  хвилинний Cron, normal/unavailable із перевіркою конфігу під час build;
+  повні синтетичні snapshots у спільному helper. Окремий worker-тест
+  відтворює 29 випадків на справжній ізольованій локальній D1.
+- **Перевірка:** початковий scheduled-тест виявив помилку фікстури:
+  її ready-time був у майбутньому відносно Date.now; застосовано керований
+  час. Типізація виявила два старі app.request виклики тесту після
+  композиції fetch/scheduled; адаптовано до fetch. Strict-ID regression
+  для кінцевого newline додано після читання основним агентом.
+  Фінальний цільовий запуск — **29/29**, без retries.
+  `CI=true npm run check` — **exit 0: 469 Vitest, 88 Playwright**,
+  типи/build. Документацію прочитано, локальні посилання перевірено;
+  `git diff --check` пройшов. Це початковий результат перед незалежним review.
+- **Межі:** немає commit/push/deploy, нових залежностей, реального BigQuery,
+  партнерських переходів чи очищення dev-бази. Cleanup, щогодинні звірки
+  інших бюджетів та повний технічний стан — наступний підкрок M4.
+  Локальні тести не доводять CPU Free або виробничу пропускну здатність.
+- **Артефакти:** [реалізація й перевірки](m4-delivery.md),
+  [специфікація](bmad/implementation-artifacts/spec-m4-delivery.md).
+
+### Завершення review і відкритий gate перевірки
+
+Три незалежні reviewer-контексти: blind та edge без findings;
+verification-gap виявив непокриту сумісність фактичних snapshots усіх
+типів і недостатній тест пріоритетного відбору понад 10 ready. Додано
+два Worker/D1 тести; 31/31 пройшли. Reviewer повторно прочитав їх і
+підтвердив закриття прогалин. Production-код від review не змінювався.
+
+Координатор повторив повний check: 471 Vitest, типи/build, 69 browser
+пройшли; CLI-група дала 1 pass/1 timeout. На початковому Q1 view був
+generic 503; UI пропонував ручний retry. Збережений test-state показав
+один entry, pending/attempt_count=0 та узгоджені counters без integrity
+паузи; health200. Виконана доставка Cron не була причиною.
+Окремий CLI2/2 та bounded діагностика Q1 на 6×49 синтетичних профілях
+пройшли, збій не відтворився. Локальні фазові logs не містили error.message,
+payload чи секретів; тимчасові instrumentation/test прибрано.
+Внутрішня причина невідома; повторний pass не оголошуємо виправленням.
+За D-111 релізний gate відкритий, spec in-review, весь M4 не завершено.
+Поточне доручення без коміту збережено. 160 локальних посилань перевірено,
+scan 219 repo/client файлів не знайшов збігів із секретами середовища.
+
+
+## 2026-11-01 — bounded retention і технічний стан M4
+
+- **Доручення:** продовжити M4 за retention-spec без коміту; зберегти доставку,
+  додати cleanup/hourly/status, не оголошувати D-111 закритим.
+- **Пропозиція AI:** guarded порції за TTL/залежностями, durable hourly claim
+  до scan, один SQL snapshot counters, фактичні Cron/ACK/error summaries.
+- **Рішення людини:** вже наданий дозвіл на цей підкрок M4; нових бізнес-рішень,
+  дозволу на deploy/push або зняття D-111 не припускаємо. Розміри порцій —
+  технічний вибір: 2 на категорію, 10 command keys, максимум 45 D1 calls.
+- **Фактична перевірка:** Node24.22.2; typecheck і build exit 0;
+  maintenance+delivery+report **77/77** Worker/D1 тестів; Chromium technical-state smoke **1/1**, diff-check exit 0. Sandbox перша
+  спроба не відкрила localhost listener (тести не виконувалися); після
+  дозволеного запуску workerd тестовий runtime пройшов. Збої, race, TTL,
+  pause, unknown claim, status і rollback — [деталі](m4-retention.md).
+  Повний check/незалежний review ще не приписуються; попередній D-111 лишається.
+
+
+### M4 review patch — bounded examination, ACK time і safe summary
+
+- **Доручення:** виправити retained scans та прогалини ACK-перевірок;
+  координатор додав same-root partial index поточних delivery errors і safe logs.
+- **Зміна AI:** raw MATERIALIZED PK keyset windows з durable per-phase cursors
+  перед eligibility, atomic read+advance, wrap/unknown-result без небезпечного
+  deletion; max 45 D1 calls збережено. Partial index і один summary на Cron.
+- **Рішення людини:** чинний обсяг M4, нових правил TTL/бізнес-рішень немає.
+- **Фактична перевірка:** лише maintenance+delivery **63/63**, exit 0; diff-check0.
+ 1000users та4000events/mock/partner/results:326cleanup rows_read, error count1row;
+ EXPLAIN підтвердив partial index. Перевірено wrap/insert-behind/concurrency/
+ unknown-window, safe log fields та stale/repeated/expired last_ack_at.
+ Повний check і повторний незалежний review залишено координатору; D-111 відкритий.
+
+### Review наступного підкроку M4
+
+Три незалежні reviewer-контексти: blind знайшов full retained scans за
+eligible LIMIT; edge — без findings; verification знайшов відсутню
+перевірку timestamp для stale ACK. Обидва findings підтверджено й
+виправлено. Cleanup використовує bounded raw PK windows з атомарним
+курсором; частковий індекс прибирає delivered-history scan поточних
+помилок. Один safe phase log доповнює технічний звіт. Нових бізнес-рішень
+немає. Original reviewers повторно прочитали fixes та підтвердили
+закриття; власних запусків тестів не заявляли.
+
+Targeted maintenance+delivery63/63; на синтетичних 1000 users і 4000 рядках
+у кожній history/key таблиці — 326 cleanup rows_read та 1 error-count read.
+Це локальний доказ усунення full scan, не гарантія production CPU/квот.
+До fixes повний check exit 0:496 Vitest + 89 Playwright. Після fixes виконується
+фінальний check. D-111 лишається відкритим через старий невстановлений 503;
+повторний pass не означає встановлення або виправлення причини.
+
+Фінальний check: exit 0, 503 Vitest + 89 Playwright, типи/build.
+514 локальних посилань валідні, 226 repo/client файлів без збігів із секретами;
+diff-check пройшов. Попередній D-111 на той момент відкритий; без commit/push/deploy.
+
+## AI-031 — bounded діагностика одиничного Q1 503
+
+2026-11-01.
+
+- **Доручення людини:** дослідити причину перед фінальним аудитом M4;
+  власник дозволив пропустити одиничний інцидент, якщо причина невідома.
+- **Пропозиція:** перевірити архівну синтетичну D1, часові межі та guards;
+  не повторювати безцільно попередні 294 Q1 проходи. Окремий investigator
+  read-only перевірив clock/result/fingerprint/catalog, без заданої причини.
+- **Рішення людини:** застосувати дозвіл лише до зафіксованого generic 503
+  на початковому Q1 у CLI-групі; загальне правило D-111 лишається чинним.
+  Це виняток для переходу до фінального аудиту, не дозвіл commit/deploy.
+- **Фактична перевірка:** архів має seed→entry 5589 мс, activity +3 мс,
+  узгоджені counters, нуль guards, pending delivery без спроб. Один запуск
+  дав 84/84: 81 existing quiz/command-protocol тест та три clock cases.
+  Однакові мілісекунди, commit−1 мс й архівні timing не відтворили дефект.
+  Investigator не запускав тести, конкретної причини також не знайшов.
+- **Результат:** причина невідома, production-код не змінювався; тимчасовий
+  тест прибрано, instrumentation не залишено. Попередні повні retention
+  перевірки успішні, але це не доказ виправлення причини. Статус ready-for-final-audit.
+- **Артефакт:** [доказовий звіт і межі винятку](m4-q1-incident.md).
+
+## AI-032 — підсумковий аудит усього M4
+
+2026-11-01.
+
+- **Доручення:** перевірити M4 за ТЗ/рішеннями з BMAD, зробити один коміт
+  після успіху. База — `3c1edc9855e1a1ce48dd4e8fb49c7256d98e3d17`.
+- **Пропозиція й метод:** bmad-review із project overrides; три незалежні
+  контексти adversarial / edge-case-hunter / verification-gap отримали
+  весь tracked/untracked diff. Чужі findings під час читання не передавалися.
+- **Висновки:** вісім findings, зокрема три незалежні згадки прихованого
+  receiver mode. Root підтвердив чотири дефекти (writes, mode, перший
+  stale, overlap-success) та дві прогалини тестів (received_at TTL і
+  вартість саме production error-count SQL). Усі опрацьовано.
+- **Рішення людини:** аудит і один коміт за успіху дозволені; виправлення
+  відновлюють погоджені контракти. Обмежений виняток Q1 503 збережено,
+  без вигаданої причини або послаблення правила для нових збоїв.
+- **Факт:** root додав mode API/UI та тести; окремі агенти виправили
+  quota/status і додали regression cases. Інші контексти повторно
+  прочитали mode й quota fixes, без нових підтверджених дефектів.
+- **Перевірка:** до fixes повний check 503/89 успішний; RED довів
+  98 writes/idle run, після fix — 2. Малий сценарій 95 подій із резервом
+  дає проєкцію 35020 writes/добу. Цільові 67/67 і status 6/6 пройшли;
+  root фінальний check — **517 Vitest + 89 Playwright**, типи/build,
+  exit 0 без test retries. Секретів середовища в repo/client bundle немає.
+- **Межі:** M4 завершено локально, M5/M6 попереду. Dev D1 не змінено;
+  0005 перевірено на ізольованих базах. Без push/deploy, нового GitHub CI
+  чи зовнішніх партнерських переходів.
+- **Артефакти:** [аудит](bmad/reviews/2026-11-01-m4/report.md),
+  [findings/triage](bmad/reviews/2026-11-01-m4/findings.json),
+  [вимірювання витрат](capacity-and-delivery.md).

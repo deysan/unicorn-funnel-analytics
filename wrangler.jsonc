@@ -12,7 +12,9 @@
     "run_worker_first": ["/api/*", "/report", "/report/*"]
   },
   "secrets": { "required": ["COMMAND_HMAC_SECRET", "IP_HMAC_SECRET", "PARTNER_TOKENS", "REPORT_USERNAME", "REPORT_PASSWORD"] },
+  "triggers": { "crons": ["* * * * *"] },
   "vars": {
+    "MOCK_RECEIVER_MODE": "normal",
     "LOCAL_RUNTIME": "true",
     "ALLOWED_ORIGINS": "https://localhost:5173,https://localhost:4173,https://127.0.0.1:5173,https://127.0.0.1:4173,http://localhost:5173,http://localhost:4173,http://127.0.0.1:5173,http://127.0.0.1:4173"
   },

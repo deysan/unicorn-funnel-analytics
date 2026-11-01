@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { runMaintenance } from './maintenance/coordinator';
 import { report } from './http/report';
 import { partner } from './http/partner';
 import { quiz } from './http/quiz';
@@ -37,4 +38,11 @@ app.notFound((c) => c.json({
   code: 'not_found', message: 'Маршрут не знайдено.', retryable: false,
 }, 404));
 
-export default app;
+export default {
+  fetch: app.fetch,
+  async scheduled(_controller: ScheduledController, env: Env, _ctx: ExecutionContext) {
+    const result = await runMaintenance({ db: env.DB, mode: env.MOCK_RECEIVER_MODE });
+    const summary = JSON.stringify({ code: 'maintenance_run', delivery: result.delivery, hourly: result.hourly, cleanup: result.cleanup, errors: result.errors });
+    if (result.errors.length) console.warn(summary); else console.info(summary);
+  },
+};

@@ -6,7 +6,7 @@ function funnel(offer?:string) {return {report_status:'ready',updated_at:now,ava
   quiz:{activity:{entered:5,started:5,completed:4,questions:{preferred_gender:{viewed:3,confirmed:1},preferred_ethnicity:{viewed:4,confirmed:3},email:{viewed:5,confirmed:4}}},conversions:{questions:{preferred_gender:{numerator:1,denominator:3},preferred_ethnicity:{numerator:3,denominator:4},email:{numerator:4,denominator:5}},started_completed:{numerator:4,denominator:5},started_offer:{numerator:2,denominator:5}}},
   offers:{activity:{transitioned:5,bypass:0,leads:3,buyers:1,purchases:offer==='999'?9:2},conversions:{transition_lead:{numerator:3,denominator:5},transition_purchase:{numerator:1,denominator:5}}},
 }};}
-const status={updated_at:now,delivery:{pending:0,in_flight:0,delivered:0},budgets:[],integrity_paused:false,history_unverified:false,history_metadata:'confirmed',cron:'not_implemented',export:'not_implemented'};
+const status={updated_at:now,receiver_mode:'normal',delivery:{pending:0,in_flight:0,delivered:0,oldest_age_ms:null,delayed:false,last_ack_at:null,errors:[]},budgets:[],integrity_paused:false,history_unverified:false,history_metadata:'confirmed',pause_reason:null,cron:{status:'unknown',last_attempt_at:null,last_success_at:null,stale:null,errors:[]},cleanup:{at:null,phases:null},reconciliation:{status:'unknown',attempt_at:null,read_at:null,summary:null}};
 const filters={updated_at:now,catalog_version:'a'.repeat(64),prelands:['demo'],offers:[{id:'003',name:'Synthetic',status:'active'}]};
 async function authenticate(page:Page){const creds=await reportCredentials();await page.context().setExtraHTTPHeaders({Authorization:'Basic '+Buffer.from(creds.username+':'+creds.password).toString('base64')});}
 async function mock(page:Page) {
@@ -139,4 +139,19 @@ test('labeled conversions show distinct pairs, rounded thirds and remaining shar
     const item = page.locator('.report-conversions > div').filter({has:page.getByText(label, {exact:true})});
     await expect(item.locator('dd strong')).toHaveText(percent); await expect(item.locator('dd small')).toHaveText(pair);
   }
+});
+test('technical state truthfully shows unknown, thresholds, stale Cron, delayed delivery and phase failures @report',async({page})=>{
+ await mock(page);await page.goto('/report/?from='+day+'&to='+day);
+ await expect(page.getByText('Режим імітатора поточного обробника: normal.',{exact:false})).toBeVisible();
+ await expect(page.getByText('Cron: ще немає даних',{exact:false})).toBeVisible();
+ const failed={...status,receiver_mode:'unavailable',delivery:{...status.delivery,pending:1,oldest_age_ms:900_001,delayed:true,errors:[{code:'timeout',count:1}]},
+  budgets:[{key:'events',used:9500,limit:10000,paused:false,alert:'critical'},{key:'profiles',used:800,limit:1000,paused:false,alert:'warning'}],
+  cron:{status:'partial_failure',last_attempt_at:now-600_000,last_success_at:now-900_000,stale:true,errors:['cleanup_failed']},
+  cleanup:{at:now,phases:{events:{changed:0,skipped:0,has_more:true,error:'cleanup_failed'}}}};
+ await page.route('**/api/v1/report/status',route=>route.fulfill({json:failed}));await page.getByRole('button',{name:'Оновити',exact:true}).click();
+ await expect(page.getByText('Режим імітатора поточного обробника: unavailable.',{exact:false})).toBeVisible();
+ await expect(page.getByText('Cron: часткова невдача',{exact:false})).toBeVisible();await expect(page.getByText('· критично ≥95%',{exact:false})).toBeVisible();await expect(page.getByText('· увага ≥80%',{exact:false})).toBeVisible();
+ await expect(page.getByText('· затримка понад 15 хв',{exact:false})).toBeVisible();await expect(page.getByText('· помилка очищення',{exact:false})).toBeVisible();
+ await page.route('**/api/v1/report/status',route=>route.fulfill({status:503,json:{code:'temporarily_unavailable',retryable:true}}));await page.getByRole('button',{name:'Оновити',exact:true}).click();
+ await expect(page.getByText('Cron: часткова невдача',{exact:false})).toHaveCount(0);await expect(page.getByText('Технічний стан недоступний.',{exact:true})).toBeVisible();
 });

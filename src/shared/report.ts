@@ -48,9 +48,13 @@ export const filtersSchema = z.strictObject({ updated_at: count, catalog_version
   prelands: z.array(prelandSchema), offers: z.array(z.strictObject({ id: offerIdSchema, name: z.string().min(1).max(256).optional(), status: z.enum(['active', 'inactive', 'historical']) })) });
 export type ReportFilters = z.infer<typeof filtersSchema>;
 export const reportStatusSchema = z.strictObject({ updated_at: count,
-  delivery: z.strictObject({ pending: count, in_flight: count, delivered: count }),
-  budgets: z.array(z.strictObject({ key: z.enum(['undelivered', 'events', 'profiles', 'command_keys']), used: count, limit: count, paused: z.boolean() })),
+  receiver_mode: z.enum(['normal', 'unavailable']),
+  delivery: z.strictObject({ pending: count, in_flight: count, delivered: count, oldest_age_ms: count.nullable(), delayed: z.boolean(), last_ack_at: count.nullable(), errors: z.array(z.strictObject({ code: z.string().regex(/^[a-z_]+$/), count })) }),
+  budgets: z.array(z.strictObject({ key: z.enum(['undelivered', 'events', 'profiles', 'command_keys']), used: count, limit: count, paused: z.boolean(), alert: z.enum(['normal', 'warning', 'critical']) })),
   integrity_paused: z.boolean(), history_unverified: z.boolean(), history_metadata: z.enum(['confirmed', 'missing', 'invalid']),
-  cron: z.literal('not_implemented'), export: z.literal('not_implemented'),
+  pause_reason: z.enum(['integrity', 'capacity']).nullable(),
+  cron: z.strictObject({ status: z.enum(['unknown', 'running', 'complete', 'partial_failure']), last_attempt_at: count.nullable(), last_success_at: count.nullable(), stale: z.boolean().nullable(), errors: z.array(z.string().regex(/^[a-z_]+$/)) }),
+  cleanup: z.strictObject({ at: count.nullable(), phases: z.record(z.string(), z.strictObject({ changed: count, skipped: count, has_more: z.boolean(), error: z.literal('cleanup_failed').nullable() })).nullable() }),
+  reconciliation: z.strictObject({ status: z.enum(['unknown', 'claimed', 'matched', 'mismatch', 'read_failed']), attempt_at: count.nullable(), read_at: count.nullable(), summary: z.record(z.string(), count.nullable()).nullable() }),
 });
 export type ReportStatus = z.infer<typeof reportStatusSchema>;

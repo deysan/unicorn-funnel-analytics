@@ -96,21 +96,37 @@ it('status uses actual delivery counts; filters include saved historical ids wit
   const e=await event({type:'funnel_entered',preland:'saved'});await db.prepare("INSERT INTO event_delivery(event_id,status,next_attempt_at) VALUES (?,'pending',?)").bind(e,today).run();
   await transition({preland:'archived',offer:'999'});
   const filters=await readFilters(db);expect(filters.prelands).toEqual(['archived','demo','saved']);expect(filters.offers).toContainEqual({id:'999',status:'historical'});expect(JSON.stringify(filters)).not.toMatch(/epu|https|email|user_id/);
-  const status=await readStatus(db);expect(status).toMatchObject({delivery:{pending:1,in_flight:0,delivered:0},cron:'not_implemented',export:'not_implemented',history_metadata:'confirmed'});
+  const status=await readStatus(db,'normal');expect(status).toMatchObject({delivery:{pending:1,in_flight:0,delivered:0},cron:{status:'unknown'},reconciliation:{status:'unknown'},history_metadata:'confirmed'});
   expect(status.budgets.every(b=>b.used===0)).toBe(true); // Observed delivery count is not faked from capacity counters.
 });
 const token=encodeSecret(new Uint8Array(32).fill(3));const allow={limit:async()=>({success:true})} as RateLimit;
 const bindings:ReportBindings={...env,IP_HMAC_SECRET:token,REPORT_USERNAME:'synthetic',REPORT_PASSWORD:token,REPORT_IP_LIMITER:allow,REPORT_LIMITER:allow,ASSETS:{fetch:async()=>new Response('<main>report</main>')} as unknown as Fetcher};
 const authorization='Basic '+btoa('synthetic:'+token);
 const request=(path='/api/v1/report/status',custom:ReportBindings=bindings,auth=authorization)=>report.request('https://localhost:5173'+path,{headers:{Authorization:auth}},custom);
+it('status shows current handler receiver mode without rewriting previous attempts',async()=>{
+  await db.prepare("UPDATE maintenance_control SET cron_result='partial_failure', cron_errors_json='[\"delivery_items_failed\"]' WHERE singleton_id=1").run();
+  const before=await db.prepare('SELECT * FROM maintenance_control').first();
+  for(const mode of ['unavailable','normal']) {
+    const response=await request(undefined,{...bindings,MOCK_RECEIVER_MODE:mode} as ReportBindings);
+    expect(response.status).toBe(200);expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await response.json()).toMatchObject({receiver_mode:mode,cron:{status:'partial_failure',errors:['delivery_items_failed']}});
+  }
+  expect(await db.prepare('SELECT * FROM maintenance_control').first()).toEqual(before);
+});
+it('status rejects missing or invalid receiver config instead of assuming normal',async()=>{
+  for(const mode of [undefined,'invalid']) {
+    const response=await request(undefined,{...bindings,MOCK_RECEIVER_MODE:mode} as unknown as ReportBindings);
+    expect(response.status).toBe(503);expect(await response.text()).not.toContain('receiver_mode');
+  }
+});
 it('HTML and API gated, no cookies/writes, independent from quiz and partner auth',async()=>{
   for(const path of ['/report','/report/','/report/nested','/api/v1/report/status','/api/v1/report/filters','/api/v1/report/funnel?from=2026-10-30&to=2026-10-30']) {
     const denied=await request(path,bindings,'');expect(denied.status).toBe(401);expect(denied.headers.get('www-authenticate')).toContain('Basic');expect(denied.headers.get('cache-control')).toBe('no-store');
     const success=await request(path);expect(success.status).toBe(200);expect(success.headers.get('cache-control')).toBe('no-store');expect(success.headers.has('set-cookie')).toBe(false);
   }
   expect((await request('/report',bindings,'Bearer '+token)).status).toBe(401);
-  const publicRoute=await app.request('https://localhost:5173/api/v1/health',{},bindings as Env);expect(publicRoute.status).toBe(200);
-  const protectedRoute=await app.request('https://localhost:5173/report/',{},bindings as Env);expect(protectedRoute.status).toBe(401);
+  const publicRoute=await app.fetch(new Request('https://localhost:5173/api/v1/health'),bindings as Env);expect(publicRoute.status).toBe(200);
+  const protectedRoute=await app.fetch(new Request('https://localhost:5173/report/'),bindings as Env);expect(protectedRoute.status).toBe(401);
 });
 it('strict query and safe D1/config failures, no leaked details',async()=>{
   for(const path of ['/api/v1/report/status?a=1','/api/v1/report/filters?a=1','/api/v1/report/funnel','/api/v1/report/funnel?from=9999-12-31&to=9999-12-31','/api/v1/report/funnel?from=2026-10-30&to=2026-10-30&extra=1']) expect((await request(path)).status).toBe(400);

@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-01",
+  "baseline": "3c1edc9855e1a1ce48dd4e8fb49c7256d98e3d17",
+  "scope": "All M4, SC10–12, inherited admission/postback guarantees",
+  "runtime": "BMAD 6.12.4",
+  "overrides": "_bmad/custom/bmad-review.toml",
+  "lenses": [
+    "adversarial",
+    "edge-case-hunter",
+    "verification-gap"
+  ],
+  "review_input_bytes": 178813,
+  "independent_contexts": 3,
+  "no_finding_quota": true,
+  "findings": {
+    "accepted": 8,
+    "unique_defects": 4,
+    "unique_verification_gaps": 2,
+    "overlap": "receiver mode found by all three lenses",
+    "open": 0
+  },
+  "baseline_check": {
+    "vitest": 503,
+    "playwright": 89,
+    "exit_code": 0
+  },
+  "final_check": {
+    "command": "CI=true npm run check",
+    "vitest": 517,
+    "playwright": 89,
+    "typecheck": "passed",
+    "build": "passed",
+    "exit_code": 0
+  },
+  "scoped_exception": "docs/m4-q1-incident.md; unknown past Q1 503, explicit owner waiver; no new failures waived",
+  "result": "M4 complete locally; M5/M6 remain",
+  "push": false,
+  "deploy": false
+}

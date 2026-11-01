@@ -1,0 +1,99 @@
+[
+  {
+    "id": "M4-01",
+    "lens": "adversarial",
+    "location": "src/server/maintenance/cleanup.ts:35-47",
+    "trigger_condition": "Порожні window batches та claim пишуть службові рядки навіть без роботи; виміряно 98 rows_written на повторний idle Cron.",
+    "guard_snippet": "Прибрати незмінні guarded mutations через read-only preflight; виміряти повний idle Cron і малий день, зберігши guards та ліміт викликів.",
+    "potential_consequence": "141120 записів/добу без трафіку перевищують Free-квоту.",
+    "triage": "accepted",
+    "resolution": "fixed",
+    "verification": "Final full check: 517 Vitest + 89 Playwright, typecheck/build exit 0"
+  },
+  {
+    "id": "M4-02",
+    "lens": "adversarial",
+    "location": "src/server/report/read.ts; src/shared/report.ts; src/client/Report.tsx",
+    "trigger_condition": "Технічний звіт не містить normal/unavailable поточного обробника, всупереч D-172.",
+    "guard_snippet": "Передати env mode, валідувати й показати його; перевірити HTTP/UI та незмінність старих результатів.",
+    "potential_consequence": "Неможливо відрізнити навмисне вимкнення приймача від несправності.",
+    "triage": "accepted",
+    "resolution": "fixed",
+    "verification": "Final full check: 517 Vitest + 89 Playwright, typecheck/build exit 0"
+  },
+  {
+    "id": "M4-03",
+    "lens": "edge-case-hunter",
+    "location": "src/server/report/read.ts:111-112",
+    "trigger_condition": "Перший Cron почався менше п'яти хвилин тому, але успіху ще немає.",
+    "guard_snippet": "Вік без першого успіху рахувати від збереженої першої спроби; точні тести порога.",
+    "potential_consequence": "Передчасне повідомлення понад 5 хв порушує D-060.",
+    "triage": "accepted",
+    "resolution": "fixed",
+    "verification": "Final full check: 517 Vitest + 89 Playwright, typecheck/build exit 0"
+  },
+  {
+    "id": "M4-04",
+    "lens": "edge-case-hunter",
+    "location": "src/server/maintenance/coordinator.ts:28-33",
+    "trigger_condition": "Новіша спроба замінює token до завершення попередньої успішної.",
+    "guard_snippet": "Оновлювати глобальний MAX success незалежно від token; token захищає лише поля поточної спроби.",
+    "potential_consequence": "Реальний успіх втрачається в технічному статусі, породжуючи хибне попередження.",
+    "triage": "accepted",
+    "resolution": "fixed",
+    "verification": "Final full check: 517 Vitest + 89 Playwright, typecheck/build exit 0"
+  },
+  {
+    "id": "M4-05",
+    "lens": "edge-case-hunter",
+    "location": "src/server/report/read.ts:104-116",
+    "trigger_condition": "Після normal→unavailable порожня черга успішна, режим прихований.",
+    "guard_snippet": "Додати режим поточного обробника до status/schema/UI.",
+    "potential_consequence": "Перевіряючий не бачить вимкнення або відновлення до фактичної доставки.",
+    "triage": "accepted",
+    "resolution": "fixed",
+    "verification": "Final full check: 517 Vitest + 89 Playwright, typecheck/build exit 0"
+  },
+  {
+    "id": "M4-06",
+    "lens": "verification-gap",
+    "location": "src/server/maintenance/cleanup.ts:14",
+    "trigger_condition": "TTL-тести не розділяють occurred_at та received_at для пізньої партнерської події.",
+    "guard_snippet": "Delivered Purchase із давнім occurred_at та свіжим received_at: утримувати подію/ключ/бюджет до received_at+90d.",
+    "potential_consequence": "Регресія на occurred_at передчасно видалить пізній постбек.",
+    "gap_shape": "regression-gap",
+    "evidence": "Maintenance fixtures задавали однакові timestamps; producer delivery test не викликає cleanup.",
+    "consumer": "src/server/maintenance/cleanup.ts:14",
+    "triage": "accepted",
+    "resolution": "covered",
+    "verification": "Final full check: 517 Vitest + 89 Playwright, typecheck/build exit 0"
+  },
+  {
+    "id": "M4-07",
+    "lens": "verification-gap",
+    "location": "tests/worker/maintenance.test.ts:224",
+    "trigger_condition": "rows_read error count перевіряється на копії SQL з тесту, не запиті production coordinator.",
+    "guard_snippet": "Перехопити реально виконаний runMaintenance prepared statement і його rows_read на великій delivered-історії.",
+    "potential_consequence": "Регресія production predicate втратить partial index, але тест залишиться зеленим.",
+    "gap_shape": "broken-verification-gap",
+    "evidence": "Велика fixture викликає runCleanup; локальна sql змінна використовується для rows_read/EXPLAIN. API call counter не перевіряє прочитані рядки.",
+    "consumer": "tests/worker/maintenance.test.ts:224",
+    "triage": "accepted",
+    "resolution": "covered",
+    "verification": "Final full check: 517 Vitest + 89 Playwright, typecheck/build exit 0"
+  },
+  {
+    "id": "M4-08",
+    "lens": "verification-gap",
+    "location": "src/server/report/read.ts:104",
+    "trigger_condition": "Відсутній поточний receiver mode, прямо погоджений D-172.",
+    "guard_snippet": "Передати mode з env, додати status/schema/UI; HTTP normal/unavailable.",
+    "potential_consequence": "Старі receiver_unavailable у черзі не доводять режим після перемикання.",
+    "gap_shape": "other",
+    "evidence": "HTTP handler передавав лише DB, режим був лише в scheduled та його тесті; status tests перевіряли errors/thresholds.",
+    "consumer": "src/server/report/read.ts:104",
+    "triage": "accepted",
+    "resolution": "fixed",
+    "verification": "Final full check: 517 Vitest + 89 Playwright, typecheck/build exit 0"
+  }
+]

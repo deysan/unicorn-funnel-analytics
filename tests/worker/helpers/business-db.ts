@@ -30,7 +30,17 @@ export function eventStatement(eventId: string, type: EventKind = 'funnel_entere
     .bind(eventId, type, options.user ?? userId, now, now, options.question ?? null,
       options.click ?? null, options.offer ?? null, options.flow ?? null,
       options.entry ?? null, options.view ?? null, options.completion ?? null,
-      JSON.stringify({ schema_version: 1, event_id: eventId, event_type: type }));
+      JSON.stringify({ schema_version: 1, event_id: eventId, event_type: type,
+        user_id: options.user ?? userId, preland_id: 'demo', occurred_at: now, received_at: now,
+        ...(options.question ? { question_id: options.question } : {}),
+        ...(options.entry ? { entry_event_id: options.entry } : {}),
+        ...(options.view ? { view_event_id: options.view } : {}),
+        ...(options.completion ? { completion_event_id: options.completion } : {}),
+        ...(options.click ? { click_id: options.click } : {}),
+        ...(options.offer ? { offer_id: options.offer } : {}),
+        ...(options.flow ? { flow_mode: options.flow } : {}),
+        ...(['Lead', 'Purchase'].includes(type) ? { partner_id: 'demo-partner', partner_event_id: eventId } : {}),
+      }));
 }
 
 export function clickStatement(clickId: string, entryId: string, completionId: string | null = null) {
