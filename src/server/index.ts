@@ -1,4 +1,7 @@
 import { Hono } from 'hono';
+import { report } from './http/report';
+import { partner } from './http/partner';
+import { quiz } from './http/quiz';
 import { healthSchema } from '../shared/health';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -22,6 +25,13 @@ app.get('/api/v1/health', async (c) => {
     }, 503);
   }
 });
+
+app.route('/api/v1/quiz', quiz);
+app.route('/api/v1/partner', partner);
+
+app.use('/api/v1/report/*', async (c) => report.fetch(c.req.raw, c.env));
+app.use('/report', async (c) => report.fetch(c.req.raw, c.env));
+app.use('/report/*', async (c) => report.fetch(c.req.raw, c.env));
 
 app.notFound((c) => c.json({
   code: 'not_found', message: 'Маршрут не знайдено.', retryable: false,

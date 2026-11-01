@@ -1,5 +1,19 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": { "lib": ["ES2022"], "types": ["node"] },
-  "include": ["vite.config.ts", "vitest*.config.ts", "playwright.config.ts", "tests/unit"]
+  "compilerOptions": {
+    "lib": [
+      "ES2022"
+    ],
+    "types": [
+      "node"
+    ],
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "vite.config.ts",
+    "vitest*.config.ts",
+    "playwright.config.ts",
+    "tests/unit",
+    "scripts/partner-cli.ts"
+  ]
 }

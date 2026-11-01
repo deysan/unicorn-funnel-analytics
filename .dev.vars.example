@@ -1,0 +1,8 @@
+# npm run setup:local creates stable independent random local secrets.
+COMMAND_HMAC_SECRET=REPLACE_WITH_RANDOM_32_BYTES_BASE64URL
+IP_HMAC_SECRET=REPLACE_WITH_DIFFERENT_RANDOM_32_BYTES_BASE64URL
+PARTNER_TOKENS='{"demo-partner":"REPLACE_WITH_RANDOM_32_BYTES_BASE64URL"}'
+
+# Окремий доступ до звіту; setup генерує лише відсутні значення.
+REPORT_USERNAME=generated-by-setup
+REPORT_PASSWORD=generated-by-setup

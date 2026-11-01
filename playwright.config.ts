@@ -2,13 +2,16 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/smoke',
+  outputDir: './test-results/' + (process.env.UNICORN_SMOKE_GROUP ?? 'manual'),
   fullyParallel: false,
   workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
+  timeout: 90_000,
+  expect: { timeout: 45_000 },
   globalTimeout: 5 * 60_000,
   reporter: 'list',
-  use: { baseURL: 'http://127.0.0.1:4173' },
+  use: { baseURL: 'https://localhost:4173', ignoreHTTPSErrors: true },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', grep: /@critical/, use: { ...devices['Desktop Firefox'] } },
@@ -17,8 +20,9 @@ export default defineConfig({
     { name: 'mobile-webkit', grep: /@critical/, use: { ...devices['iPhone 13'] } },
   ],
   webServer: {
-    command: 'npm run preview',
-    url: 'http://127.0.0.1:4173',
+    command: 'node scripts/e2e-server.mjs',
+    url: 'https://localhost:4173',
+    ignoreHTTPSErrors: true,
     reuseExistingServer: false,
     timeout: 60_000,
   },

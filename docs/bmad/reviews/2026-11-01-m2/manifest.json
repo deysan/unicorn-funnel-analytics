@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-01",
+  "baseline": "2c6798642ff5740f742246d2de8fdc6f16542e9c",
+  "scope": "Увесь незакомічений M2; аудит ТЗ/рішень і критеріїв M2 перед одним локальним комітом",
+  "lenses": [
+    "adversarial",
+    "edge-case-hunter",
+    "verification-gap"
+  ],
+  "diff_bytes": 528291,
+  "runtime": "BMAD 6.12.4",
+  "overrides": "_bmad/custom/bmad-review.toml",
+  "no_finding_quota": true,
+  "source_checked_on": "2026-11-01",
+  "source_url": "https://docs.google.com/document/d/1gitcbjFaNR_rz8BGErQgLVJqi2njv494-tsCNPPIbRY/edit",
+  "findings": 4,
+  "unique_issues": 3,
+  "unresolved_findings": 0,
+  "check": {
+    "command": "CI=true npm run check",
+    "exit_code": 0,
+    "vitest": {
+      "total": 420,
+      "unit": 182,
+      "worker_d1": 238,
+      "files": 25
+    },
+    "playwright": {
+      "total": 69,
+      "groups": [
+        26,
+        24,
+        2,
+        13,
+        4
+      ]
+    },
+    "typecheck": "passed",
+    "build": "passed"
+  },
+  "git_action": "one_local_M2_commit_after_checks; no_push_or_history_rewrite",
+  "scope_limit": "M2 local slice; not entire MVP or cloud release"
+}

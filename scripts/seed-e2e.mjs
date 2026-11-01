@@ -1,0 +1,12 @@
+import { randomBytes, randomUUID, createHash } from 'node:crypto';
+import { writeFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+if (process.env.UNICORN_E2E !== 'true') throw new Error('Dedicated E2E setup required');
+const profiles = Array.from({ length: 100 }, () => ({ id: randomUUID(), token: randomBytes(32).toString('base64url') }));
+const now = Date.now();
+let sql = profiles.map(({ id, token }) => `INSERT INTO users (user_id, created_at, last_active_at, access_secret_hash) VALUES ('${id}', ${now}, ${now}, '${createHash('sha256').update(Buffer.from(token, 'base64url')).digest('hex')}');`).join('\n') + `\nUPDATE capacity_control SET used_count = used_count + ${profiles.length} WHERE budget_key = 'profiles';\n`;
+sql += `INSERT INTO user_offer_leads (user_id, offer_id, latest_lead_at) VALUES ('${profiles[19].id}', '003', ${now});\nUPDATE users SET selection_revision = selection_revision + 1 WHERE user_id = '${profiles[19].id}';\n`;
+await writeFile('.wrangler/e2e-seed.sql', sql, { mode: 0o600 });
+await writeFile('.wrangler/e2e-profiles.json', JSON.stringify(profiles), { mode: 0o600 });
+const result = spawnSync('npx', ['wrangler', 'd1', 'execute', 'unicorn-local', '--local', '--persist-to', '.wrangler/e2e-state', '--file', '.wrangler/e2e-seed.sql'], { stdio: 'inherit', env: process.env });
+if (result.status !== 0) process.exit(result.status ?? 1);

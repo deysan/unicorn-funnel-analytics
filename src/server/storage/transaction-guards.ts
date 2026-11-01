@@ -1,5 +1,5 @@
 const constraints = {
-  revision: 'revision_ok', access: 'access_ok', reference: 'reference_ok', effects: 'effects_ok',
+  revision: 'revision_ok', access: 'access_ok', reference: 'reference_ok', effects: 'effects_ok', selection: 'selection_ok',
   control: 'control_ok', integrity: 'integrity_ok', epoch: 'epoch_ok',
   capacity_undelivered: 'undelivered_ok', capacity_events: 'events_ok',
   capacity_profiles: 'profiles_ok', capacity_command_keys: 'command_keys_ok',

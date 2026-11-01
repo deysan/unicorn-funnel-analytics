@@ -2,34 +2,19 @@ import { checkCommandReplay, prepareCommandResult, type CommandResult, type Norm
 import type { FingerprintKeyring } from './command-fingerprint';
 import { persistCapacityPause, reserveCapacity, readCapacitySnapshot, type Budget, type Growth } from './capacity';
 import { GuardedBatch, classifyGuard, type SqlEffect, type SqlPredicate } from './transaction-guards';
+import { accessPredicate, readActiveProfile, type ProfileSnapshot } from './profile';
+export type { ProfileSnapshot } from './profile';
 
-const PROFILE_TTL_MS = 180 * 24 * 60 * 60 * 1000;
-export interface ProfileSnapshot {
-  user_id: string; selection_revision: number;
-  preferred_gender: 'women' | 'men' | null;
-  preferred_ethnicity: 'asia' | 'europe' | 'latam' | null;
-  email: string | null; email_confirmed_at: number | null; last_active_at: number;
-}
 export interface CommandAttempt {
   result: CommandResult;
   effects: SqlEffect[];
   growth: Pick<Growth, 'events' | 'undelivered'>;
   references?: (now: number) => SqlPredicate[];
+  selection?: (now: number) => SqlPredicate[];
 }
+export interface CommandRejection { rejection: 'step_not_ready' | 'selection_not_ready' }
 export type CommandOutcome = Exclude<ReplayLookup, { status: 'not_found' }>
-  | { status: 'rejected'; reason: 'access' | 'reference' | 'integrity' | 'capacity' | 'temporary'; budget?: Budget };
-
-function accessPredicate(userId: string, secretHash: string, now: number): SqlPredicate {
-  return { sql: `EXISTS (SELECT 1 FROM users WHERE user_id = ? AND access_secret_hash = ?
-    AND revoked_at IS NULL AND expired_at IS NULL AND last_active_at > ?)`,
-  bindings: [userId, secretHash, now - PROFILE_TTL_MS] };
-}
-async function activeProfile(db: D1Database, userId: string, secretHash: string, now: number) {
-  const access = accessPredicate(userId, secretHash, now);
-  return db.prepare(`SELECT user_id, selection_revision, preferred_gender, preferred_ethnicity,
-    email, email_confirmed_at, last_active_at FROM users WHERE user_id = ? AND (${access.sql})`)
-    .bind(userId, ...access.bindings!).first<ProfileSnapshot>();
-}
+  | { status: 'rejected'; reason: 'access' | 'reference' | 'integrity' | 'capacity' | 'temporary' | 'step_not_ready' | 'selection_not_ready'; budget?: Budget };
 function freeze<T>(value: T): T {
   if (value && typeof value === 'object') { Object.freeze(value); Object.values(value).forEach(freeze); }
   return value;
@@ -40,7 +25,8 @@ function freeze<T>(value: T): T {
 export async function executeCommand(options: {
   db: D1Database; command: NormalizedCommand; secretHash: string; keys: FingerprintKeyring;
   now: () => number;
-  build: (context: { profile: ProfileSnapshot; command: NormalizedCommand; now: number }) => Promise<CommandAttempt>;
+  onCommit?: (lastActiveAt: number) => void;
+  build: (context: { profile: ProfileSnapshot; command: NormalizedCommand; now: number }) => Promise<CommandAttempt | CommandRejection>;
 }): Promise<CommandOutcome> {
   const { db, secretHash, keys, build } = options;
   const command = freeze(structuredClone(options.command));
@@ -52,7 +38,7 @@ export async function executeCommand(options: {
   };
   const replay = async (): Promise<ReplayLookup | { status: 'rejected'; reason: 'access' }> => {
     const now = time();
-    if (!await activeProfile(db, command.userId, secretHash, now)) return { status: 'rejected', reason: 'access' };
+    if (!await readActiveProfile(db, command.userId, secretHash, now)) return { status: 'rejected', reason: 'access' };
     return checkCommandReplay(db, command, keys, now);
   };
   try {
@@ -60,28 +46,39 @@ export async function executeCommand(options: {
       const previous = await replay();
       if (previous.status !== 'not_found') return previous;
       const now = time();
-      const profile = await activeProfile(db, command.userId, secretHash, now);
+      const profile = await readActiveProfile(db, command.userId, secretHash, now);
       if (!profile) return { status: 'rejected', reason: 'access' };
       if (!Number.isSafeInteger(profile.selection_revision) || profile.selection_revision < 0
         || profile.selection_revision >= Number.MAX_SAFE_INTEGER) throw new Error('storage_invalid_revision');
       const plan = await build({ profile, command, now });
-      const growth: Growth = { ...plan.growth, command_keys: 1 };
-      const capacity = await readCapacitySnapshot(db, growth);
-      const result = await prepareCommandResult(db, command, plan.result, keys, now);
+      const rejected = 'rejection' in plan;
+      const growth: Growth = rejected ? {} : { ...plan.growth, command_keys: 1 };
+      const capacity = rejected ? {} : await readCapacitySnapshot(db, growth);
+      const result = rejected ? null : await prepareCommandResult(db, command, plan.result, keys, now);
       // Час перевірки доступу береться після async побудови; revision не замінює TTL.
       const commitTime = time();
       const batch = new GuardedBatch(db);
       batch.assert('access', accessPredicate(command.userId, secretHash, commitTime));
       batch.assert('revision', { sql: '(SELECT selection_revision FROM users WHERE user_id = ?) = ?',
         bindings: [command.userId, profile.selection_revision] });
-      for (const predicate of plan.references?.(commitTime) ?? []) batch.assert('reference', predicate);
-      reserveCapacity(batch, growth, capacity);
-      for (const effect of plan.effects) batch.effect(effect);
-      batch.effect({ statement: db.prepare('UPDATE users SET last_active_at = MAX(last_active_at, ?) WHERE user_id = ?')
-        .bind(commitTime, command.userId), changes: 1 });
-      batch.effect({ statement: result, changes: 1 });
+      if (!rejected) {
+        for (const predicate of plan.references?.(commitTime) ?? []) batch.assert('reference', predicate);
+        for (const predicate of plan.selection?.(commitTime) ?? []) batch.assert('selection', predicate);
+        reserveCapacity(batch, growth, capacity);
+        for (const effect of plan.effects) batch.effect(effect);
+        batch.effect({ statement: db.prepare('UPDATE users SET last_active_at = MAX(last_active_at, ?) WHERE user_id = ? RETURNING last_active_at AS committed_last_active_at')
+          .bind(commitTime, command.userId), changes: 1 });
+        batch.effect({ statement: result!, changes: 1 });
+      }
       try {
-        await db.batch(batch.finish());
+        const committed = await db.batch<{ committed_last_active_at: number }>(batch.finish());
+        if (rejected) {
+          // Конкурентний виконавець міг уже прийняти цей ключ.
+          const winner = await replay();
+          return winner.status === 'not_found' ? { status: 'rejected', reason: plan.rejection } : winner;
+        }
+        const activity = committed.flatMap((item) => item.results).find((row) => Number.isSafeInteger(row.committed_last_active_at))?.committed_last_active_at;
+        if (activity !== undefined) options.onCommit?.(activity);
         return { status: 'found', result: plan.result };
       } catch (error) {
         // Навіть timeout може мати committed winner; це читання, не повтор запису.
@@ -95,6 +92,7 @@ export async function executeCommand(options: {
           return { status: 'rejected', reason: 'capacity', budget };
         }
         if (failure === 'access' || failure === 'reference' || failure === 'integrity') return { status: 'rejected', reason: failure };
+        if (failure === 'selection') return { status: 'rejected', reason: 'selection_not_ready' };
         return { status: 'rejected', reason: 'temporary' };
       }
     }

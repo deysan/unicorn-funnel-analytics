@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures';
 
 test('UI отримує результат справжнього локального запиту Worker → D1', { tag: '@critical' }, async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/diagnostics');
   const responsePromise = page.waitForResponse('/api/v1/health');
   await page.getByRole('button', { name: 'Перевірити з’єднання' }).click();
   const response = await responsePromise;
@@ -20,7 +20,7 @@ test('невідомий API повертає JSON 404, включно з нав
 });
 
 test('мережева помилка дозволяє ручний повтор', { tag: '@critical' }, async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/diagnostics');
   await page.route('**/api/v1/health', (route) => route.abort());
   await page.getByRole('button').click();
   await expect(page.getByRole('status')).toContainText('Не вдалося');
@@ -30,14 +30,14 @@ test('мережева помилка дозволяє ручний повтор
 });
 
 test('невалідна відповідь не видається за успіх', { tag: '@critical' }, async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/diagnostics');
   await page.route('**/api/v1/health', (route) => route.fulfill({ json: { status: 'ok' } }));
   await page.getByRole('button').click();
   await expect(page.getByRole('status')).toContainText('Не вдалося');
 });
 
 test('кнопка доступна, сторінка не потребує горизонтального прокручування', { tag: '@critical' }, async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/diagnostics');
   await expect(page.getByRole('button', { name: 'Перевірити з’єднання' })).toBeInViewport({ ratio: 1 });
   const dimensions = await page.evaluate(() => ({
     contentWidth: document.documentElement.scrollWidth,

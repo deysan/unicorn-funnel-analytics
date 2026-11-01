@@ -1,0 +1,36 @@
+[
+  {
+    "lens": "adversarial",
+    "location": "src/server/http/quiz.ts:76–78; tests/smoke/partner-cli.spec.ts:65–73; docs/implementation-plan.md:40",
+    "trigger_condition": "Після успішної B застосунок повертає лише JSON; HTTP-редирект на обраний офер не реалізований і не перевірений. Єдиний тест редиректу перевіряє відмову партнерського CLI слідувати сторонньому 307, що не покриває FR-13 і D-024.",
+    "guard_snippet": "Додати мінімальний HTTP-адаптер редиректу зі збереженого target_url та тест його статусу й заголовка Location з redirect: manual. Перевірити правильний ClickID і відсутність звернення до партнера; демо-UI залишити з показом назви та URL.",
+    "potential_consequence": "Обов’язкова умова завершення M2 залишається неперевіреною: правильне формування URL у JSON та заборона редиректів у CLI не доводять працездатність HTTP-редиректу переходу на офер."
+  },
+  {
+    "lens": "edge-case-hunter",
+    "location": "src/client/controller.ts:113-123",
+    "trigger_condition": "Cookie заблоковано; після явного restart контрольний GET отримує 429, автоматичний retry повторює POST.",
+    "guard_snippet": "restart(): clearPendingOnce(); bootstrap(): if (pendingAttempt) throw new ApiFailure('identity_lost', 'Потрібне явне відновлення');",
+    "potential_consequence": "Автоповтори створюють зайві профілі після вже виконаної видачі та витрачають бюджет profiles."
+  },
+  {
+    "lens": "verification-gap",
+    "location": "tests/worker/offer-catalog.test.ts:8",
+    "trigger_condition": "Обов’язкова перевірка HTTP-редиректу з FR-13 та gate M2 відсутня: перевіряється лише побудова URL.",
+    "guard_snippet": "Перевірити формування HTTP-відповіді редиректу для обраного офера: статус 3xx, Location дорівнює збереженому target_url із правильним ClickID; заборонити слідування редиректу й зовнішні запити.",
+    "potential_consequence": "Поточні перевірки можуть пройти без доказу коректного HTTP-редиректу, хоча план прямо включає його до завершення M2. Відмова CLI слідувати редиректу не перевіряє цей контракт.",
+    "gap_shape": "other",
+    "consumer": "JSON результат вибору в src/server/http/quiz.ts та його відображення в src/client/App.tsx.",
+    "evidence": "Перечитано tests/worker/offer-catalog.test.ts, tests/worker/final-commands.test.ts, HTTP-тест A/B та tests/smoke/partner-cli.spec.ts. Пошук redirect, Location, target_url, buildOfferUrl у src/scripts/tests не знайшов тесту статусу/Location редиректу на офер."
+  },
+  {
+    "lens": "verification-gap",
+    "location": "src/client/App.tsx:18",
+    "trigger_condition": "Залежне від першої відповіді формулювання другого питання FR-01 не перевіряється на межі інтерфейсу.",
+    "guard_snippet": "Після вибору «Жінки» та «Чоловіки» окремо перевірити відповідний заголовок другого кроку; після зміни першої відповіді через Back перевірити оновлений заголовок.",
+    "potential_consequence": "Постійне формулювання «жінки» або інверсія умови порушить FR-01, але прочитані тести залишаться зеленими.",
+    "gap_shape": "regression-gap",
+    "consumer": "Заголовок другого кроку Quiz у src/client/App.tsx.",
+    "evidence": "tests/smoke/quiz.spec.ts і partner-cli.spec.ts проходили гілку «Жінки», перевіряли вибір/запити/офер, але не залежний текст. Unit-тести чоловічих уподобань перевіряли серверний вибір, не інтерфейс."
+  }
+]
