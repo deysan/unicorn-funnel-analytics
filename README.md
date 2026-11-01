@@ -18,7 +18,8 @@ M3 перевірено за матрицею відновлення й захи
 M5 завершено: [операційна процедура історії](docs/report-operations.md),
 [демонстрація](docs/demo-walkthrough.md), [підсумковий BMAD-аудит](docs/bmad/reviews/2026-11-01-m5/report.md).
 Локальний check: 534 Vitest, 89 Playwright, типи/build — успішно.
-Хмарне демо — наступний M6.
+M6: [ручний реліз і gates](docs/m6-release.md); локальний пакет підготовлено.
+Фінальний локальний check M6 після review: 569 Vitest, 89 Playwright, типи/build — успішно.
 Хмарного deploy немає. [CI на Ubuntu](https://github.com/deysan/unicorn-funnel-analytics/actions/runs/41192836436)
 підтверджено для M0 (`552be84`); для M1–M5 виконано локальні перевірки.
 Деталі: [каталог](docs/m2-offer-selection.md), [команди квізу](docs/m2-quiz-commands.md),
@@ -56,7 +57,8 @@ HTTPS потрібен для Secure cookie в WebKit; захисні атриб
 Cloudflare login і створення хмарної бази для цього запуску не потрібні.
 Binding `DB` має `remote: false`, локальні дані зберігаються в `.wrangler/`
 і не потрапляють у Git. `database_id` у конфігу — локальний ідентифікатор;
-хмарну базу не створено. Команди deploy відсутні.
+хмарну базу цей local setup не створює. Команди ручного релізу —
+у [M6 runbook](docs/m6-release.md), з окремими gates.
 
 ## Локальна демонстрація партнерських подій
 
@@ -275,7 +277,8 @@ Free-передумови D-177 перевірено 2026-10-31: Actions дос�
 Поточна перевірка комплектності — [звірка з ТЗ](docs/design-scope-check.md).
 Аудит усього M4 завершено; [звіт і докази](docs/bmad/reviews/2026-11-01-m4/report.md).
 M5 завершено: [звірка з ТЗ й докази](docs/bmad/reviews/2026-11-01-m5/report.md).
-Наступний блок — M6: перевірка Free-передумов і ручне хмарне демо.
+Поточний блок — [M6](docs/m6-release.md): окремий demo build, schema/release
+gates і bounded smoke; зовнішні результати фіксуються окремо.
 
 ## Джерела та статус
 

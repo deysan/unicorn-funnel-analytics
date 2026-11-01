@@ -23,7 +23,14 @@
     "setup:local": "node scripts/setup-local.mjs",
     "precheck": "node scripts/setup-local.mjs --secrets-only",
     "prebuild": "node scripts/setup-local.mjs --secrets-only",
-    "partner": "node scripts/partner-cli.ts"
+    "partner": "node scripts/partner-cli.ts",
+    "demo:config": "node scripts/demo-config.ts generate",
+    "demo:guard": "node scripts/demo-config.ts check",
+    "build:demo": "npm run demo:guard && vite build --mode demo && node scripts/demo-artifact.ts seal",
+    "demo:schema:sql": "node scripts/demo-schema.ts sql",
+    "demo:schema:check": "node scripts/demo-schema.ts check",
+    "demo:smoke": "node scripts/demo-smoke.mjs",
+    "demo:release:guard": "node scripts/demo-artifact.ts release"
   },
   "dependencies": {
     "hono": "4.13.14",

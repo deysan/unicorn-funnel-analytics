@@ -978,3 +978,49 @@ diff-check пройшов. Попередній D-111 на той момент �
 - **Результат:** локальний M5 завершено; [аудит/межі](bmad/reviews/2026-11-01-m5/report.md),
   [findings](bmad/reviews/2026-11-01-m5/findings.json). M6 — окремий реліз;
   push/deploy/restore/зміна dev-даних не виконувалися.
+
+## AI-035 — локальний пакет M6 перед ручним релізом
+
+- **Доручення людини:** перейти до M6; підготувати відтворюване демо на
+  Workers Free з однією D1, не міняючи бізнес-контракти. Межі —
+  [spec](bmad/implementation-artifacts/spec-m6-demo-release.md).
+- **Пропозиція й виконання AI:** прямий edge IP adapter з canonical HMAC
+  та fail-closed; окремий generated demo config/build; read-only schema
+  gate; artifact seal за SHA/hash і secret scan; bounded HTTPS Chromium/
+  CLI smoke. [Runbook](m6-release.md) розділяє локальні докази, clean SHA,
+  міграції/нову історію, deploy, smoke та реальний Cron/recovery.
+- **Рішення людини:** використано доручення M6; додаткових бізнес-рішень
+  чи схвалення реалізації не приписуємо. Free/account gates виконує
+  основний агент окремо; докази — [M6 Free](m6-free-evidence.md).
+- **Фактична перевірка:** targeted unit 20/20, Worker cloud IP 12/12,
+  типи й synthetic demo build пройшли. Справжня ізольована local D1
+  `.wrangler/m6-schema-check`: чинні 0001–0005, початкова history metadata,
+  read-only schema gate — успіх; dev persistence не змінювалася.
+  Sandbox EPERM спинив перший Worker запуск до виконання тестів;
+  дозволений локальний запуск успішний. Перший повний check — 566 Vitest,
+  89 Playwright, types/build, exit 0. Після виявлення preview `.dev.vars`
+  у поведінці Vite plugin додано demo-only виключення; synthetic-secret
+  build/scan пройшов, dirty release guard і smoke без credentials
+  очікувано відмовили. Фінальний `CI=true WRANGLER_LOG_PATH=.wrangler/logs npm run check`
+  після зміни Vite — 566 Vitest, 89 Playwright у п’яти configurations,
+  types/build, exit 0; `.wrangler/m6-final-check.log`, без пропусків/retries.
+  Локальні посилання runbook/README/plan і `git diff --check` перевірено.
+- **Межі:** виконавець не комітив, не пушив, не створював cloud ресурси,
+  не запускав cloud smoke/Cron/restore; не запускав незалежні reviews.
+  Release SHA/CI і cloud результати фіксує основний агент після gates.
+
+### Review пакета M6
+
+Основний агент запустив три незалежні context-free BMAD layers без квоти
+знахідок. Blind layer не знайшов доведених дефектів; verification layer
+знайшов два регресійні gaps (розділення IP ключів і зміна artifact після
+seal); edge layer — скасований watchdog перед browser.close. Усі три
+виправлено, відкладених немає; окремі вердикти в spec. Повний локальний
+check після fixes: **569 Vitest, 89 Playwright, типи/build, exit 0**,
+`.wrangler/m6-reviewed-check.log`. Read-only звірка пакета з M6/D-099/
+D-108/D-177/D-182: бізнес-контракти не змінено, cloud outcomes не приписано.
+
+Власник явно погодив технічний поділ M6: commit/push перевіреного пакета
+разом із M1–M5, CI, ручний deploy на Free, потім окремий commit фактів.
+Підстава — чистий release SHA за D-099 до cloud smoke; history rewrite
+не дозволено цим уточненням і не планується.

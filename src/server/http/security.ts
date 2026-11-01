@@ -2,7 +2,7 @@ import { importFingerprintKey } from '../storage/command-fingerprint';
 import { PROFILE_TTL_MS } from '../storage/profile';
 import { GuardedBatch, classifyGuard } from '../storage/transaction-guards';
 import { readCapacitySnapshot, reserveCapacity, persistCapacityPause } from '../storage/capacity';
-export type QuizBindings = Pick<Env, 'DB' | 'LOCAL_RUNTIME' | 'ALLOWED_ORIGINS' | 'QUIZ_IP_LIMITER' | 'QUIZ_USER_LIMITER' | 'BOOTSTRAP_LIMITER'> & Partial<Pick<Env, 'COMMAND_HMAC_SECRET' | 'IP_HMAC_SECRET'>>;
+export type QuizBindings = { LOCAL_RUNTIME: string; ALLOWED_ORIGINS: string } & Pick<Env, 'DB' | 'QUIZ_IP_LIMITER' | 'QUIZ_USER_LIMITER' | 'BOOTSTRAP_LIMITER'> & Partial<Pick<Env, 'COMMAND_HMAC_SECRET' | 'IP_HMAC_SECRET'>>;
 export class HttpFailure extends Error {
   constructor(public code: string, public status: 400 | 401 | 403 | 404 | 409 | 410 | 422 | 413 | 415 | 429 | 503, public retryable = false, public retryAfter?: number) { super(code); }
 }
@@ -50,12 +50,35 @@ export function localRequest(request: Request, env: LocalBindings) {
   const hostname = new URL(request.url).hostname;
   if (env.LOCAL_RUNTIME !== 'true' || !['localhost', '127.0.0.1', '[::1]'].includes(hostname)) throw new HttpFailure('rate_limit_unavailable', 503, true, 30);
 }
+// Only the direct Cloudflare edge path is supported; never infer trust from XFF.
+export function cloudAddress(request: Request) {
+  const unavailable = () => new HttpFailure('rate_limit_unavailable', 503, true, 30);
+  if (new URL(request.url).protocol !== 'https:' || !request.cf?.colo
+    || ['cf-worker', 'x-real-ip', 'cf-connecting-ipv6', 'cf-pseudo-ipv4'].some((name) => request.headers.has(name))) throw unavailable();
+  const raw = request.headers.get('cf-connecting-ip') ?? '';
+  const ipv4 = /^(?:0|[1-9][0-9]{0,2})(?:\.(?:0|[1-9][0-9]{0,2})){3}$/.test(raw) && raw.split('.').every((part) => Number(part) <= 255);
+  let address = raw;
+  if (!ipv4) {
+    if (!raw.includes(':') || !/^[a-fA-F0-9:.]+$/.test(raw)) throw unavailable();
+    try { address = new URL(`https://[${raw}]/`).hostname.slice(1, -1); } catch { throw unavailable(); }
+    if (address === '2a06:98c0:3600::103') throw unavailable();
+    // IPv4-mapped IPv6 and its IPv4 spelling must share the same budget.
+    const mapped = /^::ffff:([a-f0-9]+):([a-f0-9]+)$/.exec(address);
+    if (mapped) {
+      const high = parseInt(mapped[1], 16), low = parseInt(mapped[2], 16);
+      address = [high >> 8, high & 255, low >> 8, low & 255].join('.');
+    }
+  }
+  return address;
+}
 export async function ipKey(request: Request, env: LocalBindings) {
-  // This build is explicitly local. Forwarded headers never authorize an address.
-  localRequest(request, env);
   try {
-  const key = await importFingerprintKey(decodeSecret(env.IP_HMAC_SECRET));
-  return hex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode('127.0.0.1')));
+    let address: string;
+    if (env.LOCAL_RUNTIME === 'true') { localRequest(request, env); address = '127.0.0.1'; }
+    else if (env.LOCAL_RUNTIME === 'false') address = cloudAddress(request);
+    else throw new Error('runtime_unavailable');
+    const key = await importFingerprintKey(decodeSecret(env.IP_HMAC_SECRET));
+    return hex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(address)));
   } catch { throw new HttpFailure('rate_limit_unavailable', 503, true, 30); }
 }
 export async function limit(binding: RateLimit | undefined, key: string, budget: { remaining: number }) {
