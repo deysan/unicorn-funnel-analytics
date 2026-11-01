@@ -81,3 +81,13 @@ storage; standard Linux має тариф $0.006/хв для обліку вкл
 Це актуальні одиниці документації, а не підтвердження залишку акаунта.
 У проєкті cache/upload artifacts вимкнені. CI не містить cloud secrets
 і не запускає deploy. Перевірка M0 не є CI-доказом нового release SHA.
+
+## Перший фактичний запуск
+
+CI `3424e22` успішний: [run](https://github.com/deysan/unicorn-funnel-analytics/actions/runs/41346931123).
+Створено одну D1 `unicorn-demo` (WEUR, replication disabled), міграції й
+schema gate успішні. Workers.dev налаштовано; перший Worker deploy прийняв
+сім rate-limit bindings без upgrade. Це ще не доказ їх роботи: baseline
+smoke503 зупинився до квізу через надмірну перевірку x-real-ip; виправлення
+з регресійним тестом перевіряється окремим clean SHA. Результати smoke й
+повторна звірка billing лишаються незавершеними.

@@ -1024,3 +1024,30 @@ D-108/D-177/D-182: бізнес-контракти не змінено, cloud ou
 разом із M1–M5, CI, ручний deploy на Free, потім окремий commit фактів.
 Підстава — чистий release SHA за D-099 до cloud smoke; history rewrite
 не дозволено цим уточненням і не планується.
+
+### Перший cloud запуск і діагностика
+
+Погоджений commit `3424e22` pushed без force; CI run `41346931123` green.
+На чинному Free створено нову D1, міграції 0001–0005 успішні, guarded history
+initializer записав один рядок до Worker/Cron. Remote schema `--file`
+повернув import-output, parser правильно відмовив; діагностика Wrangler
+дозволила використати той самий read-only SELECT через `--command`, gate PASS.
+Перший deploy `366c62fe-1b7c-4a1f-9470-adb0ece73865` прийняв усі сім
+rate-limit bindings. Smoke зупинився на baseline503 до квізу/бізнес-змін.
+Read-only діагностика live tail з `WRANGLER_WRITE_LOGS=false` вивела лише
+наявність заголовків: прямий edge запит містить x-real-ip, але не CF-Worker.
+Адаптер помилково відхиляє цю наявність. IP/credentials/payload не збережено.
+Потрібне мінімальне виправлення з RED/GREEN тестом, новим clean SHA і CI;
+сліпого повтору smoke або вимкнення rate limit немає.
+
+Регресійна перевірка відтворила edge дефект: 2 failed / 14 passed до fix,
+16/16 після. Hono direct запит із довільним x-real-ip успішний; Worker
+subrequest з CF-Worker досі503 без нових записів, x-real-ip не підміняє ключ.
+Повний check corrective пакета виконується; deploy до його успіху і CI
+не дозволяється. Операційні виправлення входять у дозволене завершення M6.
+
+Незалежний повторний review corrective diff не знайшов нових дефектів;
+підтвердив відсутність довіри до x-real-ip і чинність CF-Worker guard.
+Review визнав попереднє перенесення origin-header припущення на Worker
+помилковим. Full local check і CI corrective SHA можуть виконуватися
+паралельно, але обидва обов'язкові до повторного deploy.

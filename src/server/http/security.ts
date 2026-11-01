@@ -54,7 +54,7 @@ export function localRequest(request: Request, env: LocalBindings) {
 export function cloudAddress(request: Request) {
   const unavailable = () => new HttpFailure('rate_limit_unavailable', 503, true, 30);
   if (new URL(request.url).protocol !== 'https:' || !request.cf?.colo
-    || ['cf-worker', 'x-real-ip', 'cf-connecting-ipv6', 'cf-pseudo-ipv4'].some((name) => request.headers.has(name))) throw unavailable();
+    || ['cf-worker', 'cf-connecting-ipv6', 'cf-pseudo-ipv4'].some((name) => request.headers.has(name))) throw unavailable();
   const raw = request.headers.get('cf-connecting-ip') ?? '';
   const ipv4 = /^(?:0|[1-9][0-9]{0,2})(?:\.(?:0|[1-9][0-9]{0,2})){3}$/.test(raw) && raw.split('.').every((part) => Number(part) <= 255);
   let address = raw;

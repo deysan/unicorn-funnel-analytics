@@ -23,6 +23,26 @@ it.each([
 ])('keeps distinct client addresses in separate HMAC budgets', async (a, b) => {
   expect(await ipKey(request(a), cloud)).not.toBe(await ipKey(request(b), cloud));
 });
+it('ignores arbitrary x-real-ip on a direct edge request without changing the trusted CF-IP key', async () => {
+  const expected = await ipKey(request('192.0.2.1'), cloud);
+  for (const value of ['203.0.113.2', '2001:db8::2', 'not-an-address']) {
+    expect(await ipKey(request('192.0.2.1', { 'X-Real-IP': value }), cloud)).toBe(expected);
+  }
+  await expect(ipKey(request(undefined, { 'X-Real-IP': '192.0.2.1' }), cloud)).rejects.toMatchObject({ code: 'rate_limit_unavailable' });
+});
+it('cloud Hono accepts direct edge x-real-ip but still rejects same-zone Worker subrequests before writes', async () => {
+  const allow = { limit: async () => ({ success: true }) } as RateLimit;
+  const bindings: QuizBindings = { ...env, ...cloud, ALLOWED_ORIGINS: 'https://unicorn-demo.synthetic.workers.dev',
+    COMMAND_HMAC_SECRET: secret, QUIZ_IP_LIMITER: allow, QUIZ_USER_LIMITER: allow, BOOTSTRAP_LIMITER: allow };
+  const direct = await quiz.fetch(request('192.0.2.1', { 'X-Real-IP': 'arbitrary' }), bindings);
+  expect(direct.status).toBe(201);
+  const before = (await db.prepare('SELECT * FROM capacity_control').all()).results;
+  const subrequest = await quiz.fetch(request('192.0.2.1', { 'X-Real-IP': 'arbitrary', 'CF-Worker': 'synthetic.workers.dev' }), bindings);
+  expect(subrequest.status).toBe(503); expect(subrequest.headers.get('Retry-After')).toBe('30');
+  expect(await subrequest.json()).toMatchObject({ error: { code: 'rate_limit_unavailable' } });
+  expect(await db.prepare('SELECT COUNT(*) AS n FROM users').first('n')).toBe(1);
+  expect((await db.prepare('SELECT * FROM capacity_control').all()).results).toEqual(before);
+});
 it('ignores user forwarded headers; local runtime stays synthetic', async () => {
   expect(await ipKey(request('192.0.2.1',{'X-Forwarded-For':'203.0.113.2'}),cloud)).toBe(await ipKey(request('192.0.2.1'),cloud));
   const local={...cloud,LOCAL_RUNTIME:'true'};
@@ -37,5 +57,5 @@ it.each([undefined,'bad','192.0.2.1, 192.0.2.2','192.000.2.1','[::1]','fe80::1%e
   expect(await db.prepare('SELECT COUNT(*) AS n FROM users').first('n')).toBe(0);expect((await db.prepare('SELECT * FROM capacity_control').all()).results).toEqual(before);
 });
 it('rejects untrusted edge context, subrequests and pseudo IPv4',async()=>{
-  for(const req of [request('192.0.2.1',{},false),...['CF-Worker','X-Real-IP','CF-Connecting-IPv6','CF-Pseudo-IPv4'].map(name=>request('192.0.2.1',{[name]:'present'}))]) await expect(ipKey(req,cloud)).rejects.toMatchObject({code:'rate_limit_unavailable',retryAfter:30});
+  for(const req of [request('192.0.2.1',{},false),...['CF-Worker','CF-Connecting-IPv6','CF-Pseudo-IPv4'].map(name=>request('192.0.2.1',{[name]:'present'}))]) await expect(ipKey(req,cloud)).rejects.toMatchObject({code:'rate_limit_unavailable',retryAfter:30});
 });

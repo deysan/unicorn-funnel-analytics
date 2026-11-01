@@ -126,6 +126,13 @@ Blind review не знайшов доказових дефектів. Кожна
 | Verification: зміна bundle після seal без регресійного тесту | medium | CI не викликає artifact release; видалене порівняння manifest залишиться непоміченим. Patch: справжній CLI в ізольованому repo, success до зміни і rejection після. |
 | Edge: timeout скасовано перед browser.close | medium | Playwright close не має власного timeout; зависле закриття виходить за 180 секунд. Patch: тримати watchdog до завершення close. |
 
+Додаткові факти першого cloud запуску (не знахідки статичного review):
+
+| Знахідка | Вердикт | Доказ і маршрут |
+|---|---|---|
+| Remote schema SELECT через --file | medium | Wrangler 4.156.0 remote file виконує import і повертає logs/stats; parse guard правильно відмовив. Той самий SELECT через --command повернув JSON, gate PASS. Patch runbook, без зміни SQL/даних. |
+| Прямий edge запит має x-real-ip | high | Deploy прийнято, baseline API503 до business writes. Live tail без disk logging: CF-Worker відсутній, x-real-ip і CF-Connecting-IP присутні. Сам факт x-real-ip не є доказом Worker-subrequest. Patch: ігнорувати його, залишити довіру лише до CF-Connecting-IP + edge context і чинні CF-Worker/sentinel/pseudo guards; RED/GREEN regression. |
+
 Виправлення: 14/14 cloud-IP тестів, 1/1 artifact CLI, `node --check`
 smoke — успішно. Таймер очищується лише після browser.close. Відкладених
 знахідок немає. Повний check після patch: 569 Vitest, 89 Playwright, типи/build, exit 0;

@@ -10,10 +10,13 @@
 
 Cloud IP-адаптер приймає валідний `CF-Connecting-IP` лише через прямий
 HTTPS edge-запит із `request.cf.colo`. Він канонізує IPv4/IPv6, зокрема
-IPv4-mapped IPv6, й обчислює HMAC. Worker subrequests, `x-real-ip`,
+IPv4-mapped IPv6, й обчислює HMAC. Worker subrequests із `CF-Worker`,
 Pseudo IPv4, cross-zone sentinel, відсутні/некоректні IP відхиляються
 503 `rate_limit_unavailable`, `Retry-After: 30`, до бізнес-змін.
-`X-Forwarded-For` не є джерелом адреси. У local лишається синтетична
+`X-Forwarded-For` і `x-real-ip` ігноруються як джерела адреси. Сам факт
+наявності `x-real-ip` у прямому edge-запиті не є підставою відмови:
+описане провайдером stripping стосується передачі до origin.
+У local лишається синтетична
 адреса, незалежно від підставлених заголовків. IP не журналюється.
 Це підтримка прямого `workers.dev`; проксі, custom domains і service
 bindings цим релізом не додаються.
@@ -146,10 +149,24 @@ Read-only gate перевіряє повну DDL-схему (таблиці, к�
 чотири бюджети, дев’ять cleanup cursor фаз і підтверджену history boundary:
 
 ```sh
-node scripts/demo-schema.ts sql > .wrangler/demo-schema.sql
-npx wrangler d1 execute "$DEMO_DATABASE_NAME" --remote --config .wrangler/wrangler.demo.json --file .wrangler/demo-schema.sql --json > .wrangler/demo-schema-result.json
+node --input-type=module <<'JS'
+import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+import { schemaSql } from './scripts/demo-schema.ts';
+const database = process.env.DEMO_DATABASE_NAME;
+if (!database) throw new Error('database_required');
+const result = execFileSync('npx', ['wrangler', 'd1', 'execute', database,
+  '--remote', '--config', '.wrangler/wrangler.demo.json', '--command', schemaSql, '--json'],
+  { encoding: 'utf8', env: { ...process.env, WRANGLER_WRITE_LOGS: 'false' } });
+writeFileSync('.wrangler/demo-schema-result.json', result, { mode: 0o600 });
+JS
 node scripts/demo-schema.ts check .wrangler/demo-schema-result.json
 ```
+
+Для read-only SELECT використовується `--command`: remote `--file`
+проходить import-шлях Wrangler і повертає import statistics замість
+потрібних рядків результату. SQL передається окремим аргументом Node
+`execFileSync`, без shell interpolation.
 
 Потрібні exit 0 і `demo_schema_valid`. Gate сам не створює й не виправляє
 жодного рядка. Це перевірка схеми/control, не повний аудит бізнес-історії.

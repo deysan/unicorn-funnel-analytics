@@ -20,7 +20,8 @@ M5 завершено: [операційна процедура історії](
 Локальний check: 534 Vitest, 89 Playwright, типи/build — успішно.
 M6: [ручний реліз і gates](docs/m6-release.md); локальний пакет підготовлено.
 Фінальний локальний check M6 після review: 569 Vitest, 89 Playwright, типи/build — успішно.
-Хмарного deploy немає. [CI на Ubuntu](https://github.com/deysan/unicorn-funnel-analytics/actions/runs/41192836436)
+Перший cloud deploy M6 виконано; baseline smoke виявив помилку IP-адаптера,
+виправлення перевіряється перед повторним релізом. [CI на Ubuntu](https://github.com/deysan/unicorn-funnel-analytics/actions/runs/41192836436)
 підтверджено для M0 (`552be84`); для M1–M5 виконано локальні перевірки.
 Деталі: [каталог](docs/m2-offer-selection.md), [команди квізу](docs/m2-quiz-commands.md),
 [A/B](docs/m2-final-commands.md), [HTTP/UI](docs/m2-http-ui.md),
