@@ -31,10 +31,15 @@ M4 завершено локально: [Cron та доставка](m4-delivery
 закрив зауваження; фінальний check — 517 Vitest, 89 Playwright, типи/build, exit 0.
 M5 завершено локально: [звіт і пакет здачі](m5-report.md),
 [фінальний BMAD-аудит](bmad/reviews/2026-11-01-m5/report.md),
-534 Vitest, 89 Playwright, типи/build — exit 0. Наступний етап — M6. Для одного попереднього
+534 Vitest, 89 Playwright, типи/build — exit 0. Для одного попереднього
 Q1 503 власник дозволив [обмежений виняток D-111](m4-q1-incident.md)
-після доказової діагностики; причину не вигадано. CI для змін M1–M5
-і хмарний deploy не виконувалися.
+після доказової діагностики; причину не вигадано.
+M6 завершено: [фактичний реліз](m6-release-result.md), 571 Vitest,
+89 Playwright, типи/build та CI release SHA `01aaa04` успішні.
+Одне demo на Workers Free/D1: schema gate, cloud smoke, реальний Cron,
+unavailable/recovery і повторна звірка billing підтверджені.
+Для M6 власник погодив технічний release commit до deploy і окремий
+документаційний commit результатів; без rewrite історії.
 Джерела: [дизайн](system-design.md), [вимоги](requirements.md),
 [сценарії](scenarios.md), [контракти](architecture-notes.md).
 

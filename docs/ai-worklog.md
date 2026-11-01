@@ -1051,3 +1051,21 @@ subrequest з CF-Worker досі503 без нових записів, x-real-ip 
 Review визнав попереднє перенесення origin-header припущення на Worker
 помилковим. Full local check і CI corrective SHA можуть виконуватися
 паралельно, але обидва обов'язкові до повторного deploy.
+
+### Завершення M6
+
+Local check corrective SHA `01aaa04`: **571 Vitest, 89 Playwright,
+типи/build, exit 0**; CI run `41348201985` success. Після clean artifact
+guard ручний deploy, повний HTTPS UI/CLI smoke з приростами 1/1/1/1/1/1/2
+успішний. Health200, report без auth401. Реальний Cron спостерігався
+окремо; під час додаткового перегляду власником черга поповнювалася,
+після його явної згоди на коротку паузу pending=0/delivered=27.
+SC-10: той самий SHA у unavailable, одна нова synthetic Purchase прийнята,
+Cron зафіксував receiver_unavailable/partial_failure. Після normal
+pending=0/delivered=28, новий ACK, errors=[], без reset і повторного
+створення події. Фінальна версія `2c37d32e-e7cc-4261-a8c4-fb99ef7c7bd4`.
+Billing після recovery — Workers Free Active, upgrade не виконано;
+добову затримку usage не видаємо за гарантію миттєвого $0.
+[Фактичний результат і межі](m6-release-result.md). Документацію звірено
+з вимогами/планом/D-099/D-108/D-177/D-182: нових бізнес-рішень немає,
+імітації та production обмеження збережено; приватність repo незмінна.

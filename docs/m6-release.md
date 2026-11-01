@@ -1,10 +1,10 @@
 # M6: ручний реліз демо
 
-Дата: 2026-11-01. Локальний пакет підготовки; цей документ не засвідчує
-хмарний deploy. [Поточні Free-докази](m6-free-evidence.md),
-[план](implementation-plan.md), [сценарій](demo-walkthrough.md),
-[історія звіту](report-operations.md). Зовнішні кроки виконує основний
-агент/оператор лише після gates. Невідомий тариф не дозволяє upgrade.
+Дата: 2026-11-01. M6 завершено; цей документ описує процедуру повторення.
+[Фактичні SHA/versions, smoke, Cron і recovery](m6-release-result.md),
+[Free-докази](m6-free-evidence.md), [план](implementation-plan.md),
+[сценарій](demo-walkthrough.md), [історія звіту](report-operations.md).
+Невідомий тариф не дозволяє upgrade; повторний реліз проходить gates.
 
 ## Що підготовлено
 
@@ -225,19 +225,17 @@ Smoke не доводить Cron. Окремо прочитайте захище
 
 ## Перевірки та фактичний стан
 
-Локально перевірено 2026-11-01: targeted config/schema 20/20, cloud IP
-12/12, типи, demo build із synthetic ID/origin; schema gate пройшов на
-новій isolated D1 `.wrangler/m6-schema-check` після чинних 0001–0005 та
-initializer. Dev persistence не читалася й не змінювалася. Release guard
-навмисно блокує незакомічений пакет. Фінальний `CI=true WRANGLER_LOG_PATH=.wrangler/logs npm run check` —
-566 Vitest, 89 Playwright у п’яти browser configurations, types/build,
-exit 0, без test retries/пропусків. Локальний лог —
-`.wrangler/m6-final-check.log` (ignored). Synthetic-secret demo build/scan
-також пройшов; dirty release guard очікувано відмовив.
+Фінальний local check: 571 Vitest, 89 Playwright, типи/build, exit 0;
+CI release SHA `01aaa04` успішний. Schema gate пройшов на isolated local
+D1 та реальній demo D1. Artifact guard перевіряє clean SHA і зміну bundle;
+cloud IP має регресію реального edge запиту. Три review зауваження та
+два операційні дефекти першої спроби усунені, відкладених немає.
 
-Cloud resource/deploy/smoke/Cron/unavailable-recovery цим локальним
-пакетом не виконано. CI релізного SHA не засвідчено. Приватність репозиторію,
-імітація партнера/приймача та відсутність реальних переходів/листів збережені.
+Cloud deploy, числовий smoke, реальний Cron і unavailable → normal
+recovery виконано на Free. Демо залишено normal, pending=0 на завершення
+перевірки. [Повний фактичний запис](m6-release-result.md) містить версії,
+часи, виправлені збої й межі висновків. Dev persistence не змінювалася;
+reset/restore, реальних партнерських переходів або листів не було.
 
 ## Офіційні джерела
 
@@ -256,8 +254,6 @@ Cloud resource/deploy/smoke/Cron/unavailable-recovery цим локальним
 - [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/):
   scheduled handler і час розповсюдження налаштувань.
 
-Після трьох незалежних review layers закрито всі три зауваження: різні IP
-дають різні HMAC; справжній artifact CLI відхиляє змінений після seal bundle;
-watchdog smoke охоплює browser.close. Повний check після цих змін —
-**569 Vitest, 89 Playwright, типи/build, exit 0**
-(`.wrangler/m6-reviewed-check.log`). Відкладених зауважень немає.
+
+- [D1 Wrangler commands](https://developers.cloudflare.com/d1/wrangler-commands/):
+  `--command` для read-only query, `--file` для import; звірено 2026-11-01.

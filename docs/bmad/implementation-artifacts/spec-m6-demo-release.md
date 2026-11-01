@@ -2,7 +2,7 @@
 title: 'M6 — підготовка та ручний реліз демо на Free'
 type: 'feature'
 created: '2026-11-01'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 baseline_commit: '12e5cc1854803add1ae090065c26e6e264fc3c92'
 review_loop_iteration: 0
@@ -136,7 +136,9 @@ Blind review не знайшов доказових дефектів. Кожна
 Виправлення: 14/14 cloud-IP тестів, 1/1 artifact CLI, `node --check`
 smoke — успішно. Таймер очищується лише після browser.close. Відкладених
 знахідок немає. Повний check після patch: 569 Vitest, 89 Playwright, типи/build, exit 0;
-`.wrangler/m6-reviewed-check.log`. Хмарні acceptance criteria ще pending.
+`.wrangler/m6-reviewed-check.log`. Cloud acceptance criteria завершено: [фактичний результат](../../m6-release-result.md).
+Після cloud bugfix: 571 Vitest, 89 Playwright, типи/build і CI `01aaa04`
+успішні; RED/GREEN 2 failed → 16/16, додатковий незалежний review без знахідок.
 
 ## Verification
 

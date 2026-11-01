@@ -4,7 +4,10 @@
 Система має збирати події квізу, обирати партнерський офер, приймати
 підтверджені Lead/Purchase та будувати звіт за записаними подіями.
 
-**Стан на 2026-11-01:** проєктування та локальні M0–M5 завершено.
+**Стан на 2026-11-01:** проєктування та M0–M6 завершено.
+[Хмарне демо](https://unicorn-demo.unicorn-deysan.workers.dev/) ·
+[Захищений звіт](https://unicorn-demo.unicorn-deysan.workers.dev/report) ·
+[Результати релізу й доступ](docs/m6-release-result.md).
 Працює квіз → A/B → назва/URL і ClickID → CLI Lead → повернення без
 квізу → Purchase/повтор → закритий звіт за подіями D1.
 [Підсумковий BMAD-аудит M2](docs/bmad/reviews/2026-11-01-m2/report.md)
@@ -18,11 +21,11 @@ M3 перевірено за матрицею відновлення й захи
 M5 завершено: [операційна процедура історії](docs/report-operations.md),
 [демонстрація](docs/demo-walkthrough.md), [підсумковий BMAD-аудит](docs/bmad/reviews/2026-11-01-m5/report.md).
 Локальний check: 534 Vitest, 89 Playwright, типи/build — успішно.
-M6: [ручний реліз і gates](docs/m6-release.md); локальний пакет підготовлено.
-Фінальний локальний check M6 після review: 569 Vitest, 89 Playwright, типи/build — успішно.
-Перший cloud deploy M6 виконано; baseline smoke виявив помилку IP-адаптера,
-виправлення перевіряється перед повторним релізом. [CI на Ubuntu](https://github.com/deysan/unicorn-funnel-analytics/actions/runs/41192836436)
-підтверджено для M0 (`552be84`); для M1–M5 виконано локальні перевірки.
+M6 завершено: [ручний реліз і gates](docs/m6-release.md),
+[фактичний результат](docs/m6-release-result.md). Фінальні перевірки:
+**571 Vitest, 89 Playwright, типи/build — успішно**;
+[CI release SHA `01aaa04`](https://github.com/deysan/unicorn-funnel-analytics/actions/runs/41348201985).
+Cloud smoke, реальний Cron та unavailable → recovery пройдені на Workers Free.
 Деталі: [каталог](docs/m2-offer-selection.md), [команди квізу](docs/m2-quiz-commands.md),
 [A/B](docs/m2-final-commands.md), [HTTP/UI](docs/m2-http-ui.md),
 [постбеки/CLI](docs/m2-partner-postbacks.md), [звіт](docs/m2-report.md),
@@ -235,7 +238,7 @@ URL/refresh/visibility/error і справжній CLI → D1 → покупки
 Кеш і завантаження артефактів не ввімкнені; діагностика є в журналі run.
 Секрети Cloudflare, доступ до демо-D1, міграції та deploy у workflow відсутні.
 
-Free-передумови D-177 перевірено 2026-10-31: Actions доступні, включена
+Free-передумови D-177 повторно перевірено 2026-11-01: Actions доступні, включена
 квота є, доплати заблоковані нульовим бюджетом. Перед майбутнім хмарним
 використанням повторно звіряємо актуальні умови. При вичерпаній квоті —
 локальна перевірка конкретного SHA з явною позначкою, що CI не виконувався.
@@ -278,8 +281,7 @@ Free-передумови D-177 перевірено 2026-10-31: Actions дос�
 Поточна перевірка комплектності — [звірка з ТЗ](docs/design-scope-check.md).
 Аудит усього M4 завершено; [звіт і докази](docs/bmad/reviews/2026-11-01-m4/report.md).
 M5 завершено: [звірка з ТЗ й докази](docs/bmad/reviews/2026-11-01-m5/report.md).
-Поточний блок — [M6](docs/m6-release.md): окремий demo build, schema/release
-gates і bounded smoke; зовнішні результати фіксуються окремо.
+M6 завершено: [cloud smoke, Cron, recovery та Free-докази](docs/m6-release-result.md).
 
 ## Джерела та статус
 

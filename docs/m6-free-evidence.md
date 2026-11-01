@@ -66,14 +66,14 @@ users стосуються клієнтів застосунку, а не тар
 
 GitHub plugin не зміг прочитати приватний repo (404). Read-only `gh api`
 підтвердив `private=true`, `archived=false`, default branch `master`;
-видимість не змінювали. Actions enabled=true. Віддалений master усе ще
-на M0 `552be84de926b7f76823c41b1689f0200fd7b34f`.
+видимість не змінювали. Actions enabled=true. На початку M6 віддалений
+master був на M0 `552be84de926b7f76823c41b1689f0200fd7b34f`.
 
 Read-only dashboard підтвердив GitHub Free, доступну включену compute та
 storage квоту, account-level Actions budget **$0, Usage blocked** для
 платного використання. Отже передумови нового CI підтверджено; billing
 налаштування не змінювали. Детальні персональні відомості usage не зберігаємо.
-Це дозвільні передумови, не результат ще не виконаного запуску CI.
+Це передрелізні передумови; фактичні результати CI наведено нижче.
 
 [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions),
 прочитано 2026-11-01: Free включає $12 compute/місяць і 500 MB artifact
@@ -88,6 +88,19 @@ CI `3424e22` успішний: [run](https://github.com/deysan/unicorn-funnel-an
 Створено одну D1 `unicorn-demo` (WEUR, replication disabled), міграції й
 schema gate успішні. Workers.dev налаштовано; перший Worker deploy прийняв
 сім rate-limit bindings без upgrade. Це ще не доказ їх роботи: baseline
-smoke503 зупинився до квізу через надмірну перевірку x-real-ip; виправлення
-з регресійним тестом перевіряється окремим clean SHA. Результати smoke й
-повторна звірка billing лишаються незавершеними.
+smoke503 зупинився до квізу через надмірну перевірку x-real-ip.
+Цю спробу зупинено до виправлення з регресійним тестом і новим clean SHA;
+фінальний результат нижче.
+
+## Фінальний результат
+
+На `01aaa04` local check і [CI](https://github.com/deysan/unicorn-funnel-analytics/actions/runs/41348201985)
+успішні. Після мінімального IP fix усі сім bindings працюють у cloud
+сценарії; smoke 1/1/1/1/1/1/2, Cron і unavailable/recovery пройдені.
+Після остаточного deploy billing Subscriptions знову показав лише
+**Workers Free — Active**; Workers plans після першого deploy —
+**Free, $0, Current plan**. Upgrade/платних підписок не створено.
+Billable usage оновлюється щодня й є оцінкою: не підміняємо цим
+миттєвий облік витрат або гарантію майбутньої ціни.
+[Release record](m6-release-result.md) зберігає фактичні версії та UTC часи,
+без персональних billing даних, screenshots або секретів.
