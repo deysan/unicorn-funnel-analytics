@@ -1,0 +1,13 @@
+[
+  {
+    "lens": "adversarial",
+    "location": "docs/demo-walkthrough.md:20",
+    "trigger_condition": "Додаткове приватне вікно Chrome продовжує чинну приватну сесію; повторне демо не гарантує нового UserID.",
+    "guard_snippet": "Нова приватна сесія після закриття всіх попередніх приватних вікон або окремий чистий профіль.",
+    "potential_consequence": "Попередній Lead дає bypass, очікувані прирости +1 не відтворюються.",
+    "id": "M5-01",
+    "triage": "confirmed",
+    "resolution": "fixed",
+    "evidence": "Chrome Help answer/95464; browser cookie identity D-003/D-051"
+  }
+]

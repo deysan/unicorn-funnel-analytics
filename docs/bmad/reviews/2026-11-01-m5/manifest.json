@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-01",
+  "baseline": "366ae4fcbde19bbb7cfe045d00579979a2b30983",
+  "scope": "All M5 plus inherited report formulas/API/UI",
+  "bmad": "6.12.4",
+  "override": "_bmad/custom/bmad-review.toml",
+  "lenses": [
+    "adversarial",
+    "edge-case-hunter",
+    "verification-gap"
+  ],
+  "independent_contexts": 3,
+  "no_finding_quota": true,
+  "findings": {
+    "confirmed": 1,
+    "fixed": 1,
+    "open": 0
+  },
+  "verification": {
+    "command": "CI=true npm run check",
+    "vitest": 534,
+    "playwright": 89,
+    "typecheck": "passed",
+    "build": "passed",
+    "exit_code": 0,
+    "reused_unchanged_code_test_diff": true,
+    "diff_sha256": "06230f1b367bdab454791e6e87a820c7bdbf2632cf07e9035be23f12f6e52df5"
+  },
+  "commit": "authorized after audit",
+  "push": false,
+  "deploy": false
+}
