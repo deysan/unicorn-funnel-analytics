@@ -27,17 +27,36 @@ export class QuizController {
   private expiryTimer?: ReturnType<typeof setTimeout>;
   private autoCycles = 0; private pauseTimer?: ReturnType<typeof setTimeout>; private oldWork = false;
   private knownUser: string | null = null;
+  private contextCheck = 0;
   subscribe = (fn: () => void) => { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; };
   snapshot = () => this.state;
   private update(patch: Partial<Screen>) { this.state = { ...this.state, ...patch }; for (const fn of this.listeners) fn(); }
   private replace(state: Screen) { this.state = state; for (const fn of this.listeners) fn(); }
   start() { if (this.started) return; this.started = true; window.addEventListener('popstate', () => { void this.navigate(); });
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && this.draft && this.draft.phase !== 'done') {
-      const epoch = this.generation; const owner = this.draft.user;
-      this.expireCurrent(); void this.getContext().then((context) => { if (epoch !== this.generation || !this.draft) return; this.requireReady(context); if (context.user_id !== owner) throw new ApiFailure('identity_lost', 'Профіль змінився.'); this.expireCurrent(); }).catch((e: unknown) => this.fail(e));
-    } }); void this.run(() => this.boot(false)); }
-  private async run(action: () => Promise<void>) {
+    document.addEventListener('visibilitychange', () => { void this.checkVisibleContext(); }); void this.run(() => this.boot(false)); }
+  private async checkVisibleContext() {
+    const check = ++this.contextCheck;
+    if (document.visibilityState !== 'visible' || !this.draft || this.draft.phase === 'done') return;
+    this.expireCurrent();
+    if (this.state.busy || (this.state.pausedUntil && Date.now() < this.state.pausedUntil)) return;
+    const epoch = this.generation; const owner = this.draft.user; const operation = this.draft.b;
+    const current = () => check === this.contextCheck && epoch === this.generation
+      && this.draft?.b === operation && this.draft.phase !== 'done';
+    try {
+      // A background probe must not update the clock before its ownership check.
+      const context = await api<QuizContext>('/context?preland_id=demo');
+      if (!current()) return;
+      this.requireReady(context);
+      if (context.user_id !== owner) throw new ApiFailure('identity_lost', 'Профіль змінився.');
+      this.acceptServerTime(context.server_time);
+      this.expireCurrent(); this.scheduleExpiry();
+    } catch (error) { if (current()) this.fail(error); }
+  }
+
+  private async run(action: () => Promise<void>, retry = false) {
     if (this.state.pausedUntil && Date.now() < this.state.pausedUntil) return;
+    this.contextCheck++;
+    if (!retry) this.autoCycles = 0;
     this.retryAction = action; this.update({ busy: true, error: undefined, retry: false, pausedUntil: undefined });
     const gen = this.generation;
     try { await action(); if (gen === this.generation) { this.autoCycles = 0; this.update({ busy: false }); } }
@@ -61,30 +80,44 @@ export class QuizController {
       this.pauseTimer = setTimeout(() => { this.update({ pausedUntil: undefined }); if (this.autoCycles++ < 3) this.retry(); }, delay);
     }
   }
-  retry = () => { if (this.retryAction) void this.run(this.retryAction); };
+  retry = () => { if (this.retryAction) void this.run(this.retryAction, true); };
   restart = () => { this.generation++; this.entered = false; this.entry = { operation_id: uuid(), event_id: uuid(), preland_id: 'demo' }; this.oldWork = false; this.draft = undefined;
     try { clearDraft(); sessionStorage.removeItem('unicorn.identity.user.v1'); sessionStorage.removeItem('unicorn.identity.attempt.v1'); this.knownUser = null; } catch { /* boot will fail closed */ }
     history.replaceState({}, '', location.pathname); this.activeUrl = location.href;
     void this.run(() => this.boot(true)); };
-  refresh = () => { this.generation++; void this.run(async () => {
-    const context = await this.getContext(); this.requireReady(context);
-    if (this.context && context.user_id !== this.context.user_id) throw new ApiFailure('identity_lost', 'Профіль змінився.');
-    this.context = context;
-    if (this.draft && this.draft.phase !== 'done') {
-      // Explicit refresh first resolves a potentially committed B; read failures cannot authorize a new action.
-      let existing: QuizResult | null = null;
-      try { existing = await this.lookup(this.draft.b); } catch (e) { if (!(e instanceof ApiFailure && e.code === 'operation_expired')) throw e; }
-      if (existing) { this.finish(existing); return; }
-      if (this.draft.a) { try { await this.lookup(this.draft.a); } catch (e) { if (!(e instanceof ApiFailure && e.code === 'operation_expired')) throw e; } }
-    }
-    clearDraft(); this.draft = undefined;
-    this.entry = { operation_id: uuid(), event_id: uuid(), preland_id: 'demo' }; this.entered = false;
-    if (context.next_action === 'select_offer') { await this.ensureEntry(); await this.beginBypass(); }
-    else this.showQuestion();
-  }); };
+  refresh = () => {
+    this.generation++;
+    const entry = { operation_id: uuid(), event_id: uuid(), preland_id: 'demo' };
+    let prepared = false;
+    void this.run(async () => {
+      const context = await this.getContext(); this.requireReady(context);
+      if (this.context && context.user_id !== this.context.user_id) throw new ApiFailure('identity_lost', 'Профіль змінився.');
+      this.context = context;
+      if (!prepared) {
+        // Resolve the old attempt before allocating the effects of this explicit action.
+        if (this.draft && this.draft.phase !== 'done') {
+          let existing: QuizResult | null = null;
+          try { existing = await this.lookup(this.draft.b); } catch (e) { if (!(e instanceof ApiFailure && e.code === 'operation_expired')) throw e; }
+          if (existing) { this.finish(existing); return; }
+          if (this.draft.a) { try { await this.lookup(this.draft.a); } catch (e) { if (!(e instanceof ApiFailure && e.code === 'operation_expired')) throw e; } }
+        }
+        clearDraft(); this.draft = undefined;
+        this.entry = entry; this.entered = false; prepared = true;
+      }
+      // Retry keeps this action's entry/B, even when their server result is unknown.
+      if (this.draft) await this.recover();
+      else if (context.next_action === 'select_offer') { await this.ensureEntry(); await this.beginBypass(); }
+      else this.showQuestion();
+    });
+  };
   private async getContext() {
+    const epoch = this.generation;
     const context = await api<QuizContext>('/context?preland_id=demo');
-    this.serverClock = { time: context.server_time, monotonic: performance.now() }; return context;
+    if (epoch !== this.generation) return context;
+    this.acceptServerTime(context.server_time); return context;
+  }
+  private acceptServerTime(time: number) {
+    this.serverClock = { time: Math.max(time, this.estimatedTime()), monotonic: performance.now() };
   }
   private estimatedTime() { return this.serverClock.time + Math.max(0, performance.now() - this.serverClock.monotonic); }
   private expireCurrent() {
@@ -210,7 +243,9 @@ export class QuizController {
     let draft = this.draft!;
     const context = await this.getContext(); if (epoch !== this.generation) return; this.requireReady(context);
     if (context.user_id !== draft.user) throw new ApiFailure('identity_lost', 'Профіль змінився.');
-    this.context = context; this.draft = draft = expireDraft(draft, context.server_time); this.scheduleExpiry();
+    this.context = context;
+    if (this.draft?.b === draft.b && this.draft.phase === 'expired') draft = this.draft;
+    this.draft = draft = expireDraft(draft, this.estimatedTime()); this.scheduleExpiry();
     if (draft.phase === 'expired') { try { writeDraft(draft); } catch { try { clearDraft(); } catch { /* no email rendered */ } } }
     this.update({ kind: 'loading', context: undefined, ready: false });
     const b = await this.lookup(draft.b); if (epoch !== this.generation) return; if (b) { this.finish(b); return; }

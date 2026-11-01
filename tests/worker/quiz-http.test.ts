@@ -164,3 +164,56 @@ describe('quiz HTTP identity and protocol', () => {
     expect((await request('/operations/'+id(50), auth)).status).toBe(410);
   });
 });
+
+it('SC13 two real profiles: foreign IDs cannot read results/email or mutate either owner', async () => {
+  const a=await bootstrap(), b=await bootstrap();
+  await db.prepare('UPDATE users SET email=?, email_confirmed_at=? WHERE user_id=?').bind('PrivateSynthetic@example.test',Date.now(),b.user).run();
+  const payload={operation_id:id(700),event_id:id(701),preland_id:'demo'};
+  expect((await request('/entries',{...b,payload})).status).toBe(200);
+  const before=await businessSnapshot();
+  for(const path of ['/operations/'+id(700)]) {
+    const foreign=await request(path,{...a,user:b.user});expect(foreign.status).toBe(401);
+    const own=await request(path,a);expect(own.status).toBe(404);expect(await own.text()).not.toContain(id(701));
+  }
+  const ownContext=await request('/context?preland_id=demo&user_id='+b.user,a);
+  const dto=await ownContext.json();expect(dto).toMatchObject({user_id:a.user});expect(dto).not.toHaveProperty('email');
+  for(const options of [{...a,user:b.user,payload},{...a,payload:{...payload,user_id:b.user}}]) {
+    const response=await request('/entries',options);expect(response.status).toBe(options.user===b.user?401:400);
+    expect(response.headers.has('set-cookie')).toBe(false);expect(await response.text()).not.toContain('PrivateSynthetic');
+  }
+  expect(await businessSnapshot()).toEqual(before);
+});
+
+for(const invalid of ['revoked','expired','missing','malformed','unknown','duplicate_cookie'] as const) it(`SC13 known command replay still requires current access: ${invalid}`,async()=>{
+  const auth=await bootstrap();const payload={operation_id:id(710),event_id:id(711),preland_id:'demo'};
+  expect((await request('/entries',{...auth,payload})).status).toBe(200);
+  let cookie=auth.cookie;
+  if(invalid==='revoked')await db.prepare('UPDATE users SET revoked_at=? WHERE user_id=?').bind(Date.now(),auth.user).run();
+  if(invalid==='expired'){const past=Date.now()-180*86400000;await db.prepare('UPDATE users SET created_at=?,last_active_at=? WHERE user_id=?').bind(past,past,auth.user).run();}
+  if(invalid==='missing')cookie='';
+  if(invalid==='malformed')cookie='__Host-unicorn=invalid';
+  if(invalid==='unknown')cookie='__Host-unicorn='+encodeSecret(new Uint8Array(32).fill(4));
+  if(invalid==='duplicate_cookie')cookie+='; '+(await bootstrap()).cookie;
+  const before=await businessSnapshot();
+  const context=await (await request('/context?preland_id=demo',{...auth,cookie})).json();
+  expect(context).toMatchObject({identity_status:invalid==='missing'?'missing':'invalid'});
+  expect(context).not.toHaveProperty('user_id');expect(context).not.toHaveProperty('email');
+  for(const response of [await request('/entries',{...auth,cookie,payload}),await request('/operations/'+id(710),{...auth,cookie})]) {
+    expect(response.status).toBe(401);expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.has('set-cookie')).toBe(false);expect(await response.text()).not.toContain(id(711));
+  }
+  expect(await businessSnapshot()).toEqual(before);
+});
+
+it('SC13 authenticated quiz rejects invalid bytes and cross-origin commands before any effects',async()=>{
+  const auth=await bootstrap();const before=await businessSnapshot();
+  for(const path of ['/entries','/question-views','/answers','/email-confirmations','/offer-selections']) {
+    const response=await request(path,{...auth,headers:{Origin:'https://foreign.test'},payload:{operation_id:id(720),preland_id:'demo'}});
+    expect(response.status).toBe(403);expect(response.headers.has('set-cookie')).toBe(false);
+  }
+  for(const [body,status] of [[new Uint8Array([0xff,0x7b,0x7d]),400],['null',400],['[]',400],[JSON.stringify({operation_id:id(720),event_id:id(721),preland_id:'demo',padding:'я'.repeat(4100)}),413]] as [BodyInit,number][]) {
+    const response=await quiz.request('https://localhost:5173/entries',{method:'POST',headers:{Origin:'http://localhost:5173',Cookie:auth.cookie,'X-Expected-User-ID':auth.user,'Content-Type':'application/json'},body},bindings);
+    expect(response.status).toBe(status);expect(response.headers.get('cache-control')).toBe('no-store');expect(response.headers.has('set-cookie')).toBe(false);
+  }
+  expect(await businessSnapshot()).toEqual(before);
+});

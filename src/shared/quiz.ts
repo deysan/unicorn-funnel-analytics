@@ -9,7 +9,8 @@ export interface ReadyContext {
 export type QuizContext = ReadyContext | { identity_status: 'missing' | 'invalid'; server_time: number };
 export type QuizResult = { code: 'accepted'; event_id: string } | { code: 'no_offer'; catalog_version: string }
   | { code: 'offer_selected'; event_id: string; click_id: string; catalog_version: string; offer_id: string; offer_name: string; target_url: string };
-export interface ApiError { error: { code: string; message: string; retryable: boolean } }
+export const apiErrorSchema = z.object({ error: z.object({ code: z.string().min(1), message: z.string().min(1), retryable: z.boolean() }) });
+export type ApiError = z.infer<typeof apiErrorSchema>;
 const time = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 export const contextSchema = z.discriminatedUnion('identity_status', [
   z.strictObject({ identity_status: z.literal('ready'), user_id: uuidSchema, server_time: time,

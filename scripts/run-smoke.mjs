@@ -2,8 +2,11 @@ import { spawnSync } from 'node:child_process';
 const args = process.argv.slice(2);
 // Each group starts its own isolated server. The real IP300/min budget is never raised.
 const groups = args.length ? [args] : [
-  ['--project=chromium', '--grep-invert=@partner|@report'],
+  ['--project=chromium', '--grep-invert=@partner|@report|@concurrency|@audit|M3'],
   ['--project=firefox', '--project=webkit', '--project=mobile-chromium', '--project=mobile-webkit', '--grep-invert=@report'],
+  ['--project=chromium', '--grep=M3', '--grep-invert=@audit'],
+  ['--project=chromium', '--grep=@audit'],
+  ['--project=chromium', '--grep=@concurrency'],
   ['--project=chromium', '--grep=@partner'],
   ['--project=chromium', '--grep=@report'],
   ['--project=firefox', '--project=webkit', '--project=mobile-chromium', '--project=mobile-webkit', '--grep=@report'],

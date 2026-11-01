@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-01",
+  "baseline": "6a677951cab893acc83fbeccc12bec44873b478b",
+  "scope": "Увесь M3: зміни після M2 та успадковані механізми для gate SC03–09/13",
+  "runtime": "BMAD 6.12.4",
+  "overrides": "_bmad/custom/bmad-review.toml",
+  "lenses": [
+    "adversarial",
+    "edge-case-hunter",
+    "verification-gap"
+  ],
+  "review_input_bytes": 59352,
+  "no_finding_quota": true,
+  "independent_review_contexts": 3,
+  "findings": { "accepted": 7, "fixed_defects": 3, "covered_gaps": 4, "open": 0 },
+  "targeted_check": { "command": "npm run test:smoke -- --project=chromium --grep=@audit", "passed": 9, "exit_code": 0 },
+  "final_check": { "command": "CI=true npm run check", "vitest": 440, "playwright": 88, "typecheck": "passed", "build": "passed", "exit_code": 0 },
+  "fix_rereview": { "lenses": ["adversarial", "edge-case-hunter"], "mode": "read-only", "new_confirmed_regressions": 0 },
+  "scope_result": "M3 complete locally; M4–M6 remain",
+  "push": false,
+  "deploy": false
+}

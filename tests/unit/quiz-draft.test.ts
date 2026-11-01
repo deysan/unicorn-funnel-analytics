@@ -17,6 +17,7 @@ describe('versioned final recovery draft',()=>{
   it('exact deadline drops payload but preserves minimal read keys',()=>{
     expect(expireDraft(draft,99)).toBe(draft);
     const expired=expireDraft(draft,100);expect(expired).toMatchObject({phase:'expired',a:draft.a,b:draft.b,entry:draft.entry,deadline:100});
+    expect(expireDraft(expired, 0)).toBe(expired);
     expect(expired.email).toBeUndefined();expect(expired.view).toBeUndefined();expect(draftSchema.safeParse(expired).success).toBe(true);
   });
   it('shared response schemas reject corrupt/unknown DTOs',()=>{

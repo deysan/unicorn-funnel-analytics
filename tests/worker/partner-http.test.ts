@@ -1,3 +1,4 @@
+import { report, type ReportBindings } from '../../src/server/http/report';
 import { env } from 'cloudflare:workers';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { partner, type PartnerBindings } from '../../src/server/http/partner';
@@ -71,4 +72,15 @@ it('total IP+partner limiter wait is bounded; late success cannot write',async()
     await vi.advanceTimersByTimeAsync(1200);const response=await pending;expect(response.status).toBe(503);
     expect(await db.prepare('SELECT COUNT(*) AS n FROM partner_events').first('n')).toBe(0);
   }finally{vi.useRealTimers();}
+});
+
+it('SC13 valid report Basic credentials cannot authorize new or repeated postbacks',async()=>{
+  const credentials='Basic '+btoa('reviewer:'+otherToken);
+  const reportEnv:ReportBindings={...env,IP_HMAC_SECRET:token,REPORT_USERNAME:'reviewer',REPORT_PASSWORD:otherToken,REPORT_IP_LIMITER:allow,REPORT_LIMITER:allow,ASSETS:{fetch:async()=>new Response('report')} as unknown as Fetcher};
+  expect((await report.request('https://localhost:5173/report',{headers:{Authorization:credentials}},reportEnv)).status).toBe(200);
+  let before=await state();
+  expect((await request({headers:{Authorization:credentials}})).status).toBe(401);expect(await state()).toEqual(before);
+  expect((await request()).status).toBe(200);before=await state();
+  const denied=await request({headers:{Authorization:credentials}});expect(denied.status).toBe(401);
+  expect(denied.headers.has('set-cookie')).toBe(false);expect(await state()).toEqual(before);
 });

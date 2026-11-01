@@ -4,6 +4,8 @@ const projectOffsets: Record<string, number> = {chromium:0,firefox:20,webkit:40,
 let profileIndex = 0;
 async function seed(context: import('@playwright/test').BrowserContext, project: string) {
   const profiles = JSON.parse(await readFile('.wrangler/e2e-profiles.json','utf8')) as {id:string;token:string}[];
+  // Profile 19 is reserved for the Lead/bypass fixture.
+  if (projectOffsets[project]+profileIndex === 19) profileIndex++;
   const profile = profiles[projectOffsets[project]+profileIndex++];
   await context.addCookies([{ name: '__Host-unicorn', value: profile.token, domain: 'localhost', path:'/', httpOnly:true,secure:true,sameSite:'Lax' }]);
   return profile;
@@ -222,4 +224,74 @@ test('restart з втраченою cookie та limiter на підтвердж�
   await expect(page.getByRole('status')).toContainText('Потрібне явне відновлення'); expect(creations).toBe(2);
   await page.clock.runFor(180_000); expect(creations).toBe(2);
   expect(await page.evaluate(()=>sessionStorage.getItem('unicorn.identity.attempt.v1'))).toBe('pending');
+});
+
+for (const invalid of [null, {error:{code:'identity_lost'}}]) test(`M3 malformed A response preserves recovery: ${JSON.stringify(invalid)}`, async ({page,context},info) => {
+  await seed(context,info.project.name); await reachEmail(page);
+  let postsA=0, postsB=0;
+  page.on('request',r=>{if(r.url().endsWith('/offer-selections'))postsB++;});
+  await page.route('**/email-confirmations',async route=>{postsA++;await route.fetch();await route.fulfill({status:503,json:invalid});});
+  await page.getByLabel('Email',{exact:true}).fill('Recovery@example.test');
+  await page.getByRole('button',{name:'Підтвердити та підібрати'}).click();
+  await expect(page.getByRole('button',{name:'Повторити дію'})).toBeEnabled();
+  await expect(page.getByRole('status')).toContainText('контракту');
+  await expect(page.getByRole('button',{name:'Відновити доступ'})).toHaveCount(0);
+  const draft=JSON.parse((await page.evaluate(()=>sessionStorage.getItem('unicorn.final.v1')))!);
+  expect(draft.phase).toBe('a'); expect(postsA).toBe(1); expect(postsB).toBe(0);
+  await page.getByRole('button',{name:'Повторити дію'}).click();
+  await expect(page.getByText('ClickID',{exact:true})).toBeVisible();
+  const done=JSON.parse((await page.evaluate(()=>sessionStorage.getItem('unicorn.final.v1')))!);
+  expect(done.a).toBe(draft.a); expect(done.b).toBe(draft.b); expect(done.email).toBeUndefined();
+  expect(postsA).toBe(1); expect(postsB).toBe(1);
+});
+
+for (const late of ['identity_lost','rate_limited','success'] as const) test(`M3 late visibility ${late} cannot replace completed B`, async ({page,context},info) => {
+  await seed(context,info.project.name); await reachEmail(page);
+  await page.route('**/email-confirmations',async route=>{await route.fetch();await route.abort();});
+  await page.getByLabel('Email',{exact:true}).fill('Late@example.test');
+  await page.getByRole('button',{name:'Підтвердити та підібрати'}).click();
+  await expect(page.getByRole('button',{name:'Повторити дію'})).toBeEnabled();
+  let held: import('@playwright/test').Route | undefined;
+  await page.route('**/context?*',async route=>{if(!held){held=route;}else await route.continue();});
+  await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});document.dispatchEvent(new Event('visibilitychange'));});
+  await expect.poll(()=>Boolean(held)).toBe(true);
+  const savedResponse=await held!.fetch(); const saved=await savedResponse.json();
+  await page.getByRole('button',{name:'Повторити дію'}).click();
+  await expect(page.getByText('ClickID',{exact:true})).toBeVisible();
+  const draft=await page.evaluate(()=>sessionStorage.getItem('unicorn.final.v1'));
+  if(late==='success') await held!.fulfill({json:{...saved,server_time:saved.server_time+172800000}});
+  else await held!.fulfill({status:late==='identity_lost'?401:429,json:{error:{code:late,message:'Стара відповідь',retryable:true}}});
+  await page.evaluate(()=>new Promise(resolve=>setTimeout(resolve,100)));
+  await expect(page.getByText('ClickID',{exact:true})).toBeVisible();
+  await expect(page.getByRole('status')).not.toContainText('Стара відповідь');
+  expect(await page.evaluate(()=>sessionStorage.getItem('unicorn.final.v1'))).toBe(draft);
+});
+
+test('M3 newest visibility context controls TTL; old error and busy/paused probes are ignored', async ({page,context},info) => {
+  await seed(context,info.project.name); await reachEmail(page);
+  await page.route('**/email-confirmations',route=>route.abort());
+  await page.getByLabel('Email',{exact:true}).fill('Visibility@example.test');
+  await page.getByRole('button',{name:'Підтвердити та підібрати'}).click();
+  await expect(page.getByRole('button',{name:'Повторити дію'})).toBeEnabled();
+  const draft=JSON.parse((await page.evaluate(()=>sessionStorage.getItem('unicorn.final.v1')))!);
+  const probes:import('@playwright/test').Route[]=[];
+  await page.route('**/context?*',route=>{probes.push(route);});
+  const visible=()=>page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});document.dispatchEvent(new Event('visibilitychange'));});
+  await visible(); await expect.poll(()=>probes.length).toBe(1);
+  await visible(); await expect.poll(()=>probes.length).toBe(2);
+  const fresh=await (await probes[1].fetch()).json();
+  await probes[1].fulfill({json:{...fresh,server_time:draft.deadline}});
+  await expect(page.getByRole('status')).toContainText('Строк надсилання минув');
+  await probes[0].fulfill({status:401,json:{error:{code:'identity_lost',message:'Стара відповідь',retryable:false}}});
+  await page.evaluate(()=>new Promise(resolve=>setTimeout(resolve,100)));
+  const expired=JSON.parse((await page.evaluate(()=>sessionStorage.getItem('unicorn.final.v1')))!);
+  expect(expired.phase).toBe('expired'); expect(expired.email).toBeUndefined();
+  expect(expired.a).toBe(draft.a); expect(expired.b).toBe(draft.b);expect(expired.deadline).toBe(draft.deadline);
+  await expect(page.getByRole('button',{name:'Відновити доступ'})).toHaveCount(0);
+  // The active retry owns its context request; visibility must not add another.
+  await page.getByRole('button',{name:'Повторити дію'}).click(); await expect.poll(()=>probes.length).toBe(3);
+  await visible(); expect(probes).toHaveLength(3);
+  await probes[2].fulfill({status:429,headers:{'Retry-After':'60'},json:{error:{code:'rate_limited',message:'Пауза',retryable:true}}});
+  await expect(page.getByRole('status')).toContainText('Пауза'); await visible();
+  expect(probes).toHaveLength(3);
 });

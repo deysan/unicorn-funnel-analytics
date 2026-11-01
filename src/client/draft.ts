@@ -17,5 +17,5 @@ export function readDraft(): Draft | null {
 export function writeDraft(draft: Draft) { sessionStorage.setItem(draftKey, JSON.stringify(draftSchema.parse(draft))); }
 export function clearDraft() { sessionStorage.removeItem(draftKey); }
 export function expireDraft(draft: Draft, now: number): Draft {
-  return now < draft.deadline ? draft : { ...draft, phase: 'expired', email: undefined, view: undefined };
+  return draft.phase === 'expired' || now < draft.deadline ? draft : { ...draft, phase: 'expired', email: undefined, view: undefined };
 }

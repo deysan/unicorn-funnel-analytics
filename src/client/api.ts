@@ -1,4 +1,4 @@
-import { contextSchema, identityResponseSchema, quizResultSchema, type ApiError } from '../shared/quiz';
+import { contextSchema, identityResponseSchema, quizResultSchema, apiErrorSchema } from '../shared/quiz';
 export class ApiFailure extends Error {
   constructor(public code: string, message: string, public retryAfter = 0) { super(message); }
 }
@@ -10,8 +10,12 @@ export async function api<T>(path: string, user?: string, payload?: unknown): Pr
       ...(payload === undefined ? {} : { body: JSON.stringify(payload) }) });
   } catch { throw new ApiFailure('network', 'Немає відповіді. Повторіть дію вручну — її ключі збережено.'); }
   let value: unknown; try { value = await response.json(); } catch { throw new ApiFailure('network', 'Не вдалося прочитати відповідь. Повторіть дію.'); }
-  if (!response.ok) { const error = (value as ApiError).error;
-    throw new ApiFailure(error?.code ?? 'unknown', error?.message ?? 'Запит не виконано.', Number(response.headers.get('Retry-After') ?? 0)); }
+  if (!response.ok) {
+    const parsedError = apiErrorSchema.safeParse(value);
+    if (!parsedError.success) throw new ApiFailure('network', 'Відповідь не відповідає контракту. Повторіть дію вручну — її ключі збережено.');
+    const error = parsedError.data.error;
+    throw new ApiFailure(error.code, error.message, Number(response.headers.get('Retry-After') ?? 0));
+  }
   const schema = path.startsWith('/context') ? contextSchema : path.startsWith('/identity') ? identityResponseSchema : quizResultSchema;
   const parsed = schema.safeParse(value);
   if (!parsed.success) throw new ApiFailure('network', 'Відповідь не відповідає контракту. Повторіть дію.');

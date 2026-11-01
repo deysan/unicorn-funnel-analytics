@@ -1,9 +1,9 @@
 # Системний дизайн Unicorn
 
 Оновлено: 2026-10-30. **Проєктування завершено; зведення D-001–D-179.**
-Стан реалізації відстежується в [плані](plan.md): на 2026-11-01 M0–M2
-реалізовано й перевірено локально. Cron/cleanup, решта M3–M5 та хмарний
-реліз M6 ще попереду. [Аудит M2](bmad/reviews/2026-11-01-m2/report.md). Джерела:
+Стан реалізації відстежується в [плані](plan.md): на 2026-11-01 M0–M3
+реалізовано й перевірено локально. Cron/cleanup, решта M4–M5 та хмарний
+реліз M6 ще попереду. [Аудит M3](bmad/reviews/2026-11-01-m3/report.md). Джерела:
 [вимоги](requirements.md), [рішення](decisions.md),
 [детальні контракти та історія](architecture-notes.md), [сценарії](scenarios.md).
 Наступний етап — [implementation plan](implementation-plan.md).
@@ -33,7 +33,7 @@ Amplitude та адмінка поза MVP.
 ![Схема системи](diagrams/system-context.svg)
 
 [Редагована схема Excalidraw](diagrams/system-context.excalidraw).
-Схема показує цільовий склад MVP. Локально готовий зріз M2; Cron/cleanup
+Схема показує цільовий склад MVP. Локально готові M0–M3; Cron/cleanup
 ще заплановані, хмарного розгортання немає.
 
 Модульний моноліт: один Cloudflare Worker з Hono та scheduled handler.
