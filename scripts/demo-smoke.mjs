@@ -15,7 +15,7 @@ try {
   require(target.protocol === 'https:' && target.origin === origin && !target.username && !target.password && !target.port && target.hostname.endsWith('.workers.dev'));
   require(process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0');
   const username = process.env.REPORT_USERNAME, password = process.env.REPORT_PASSWORD, token = process.env.PARTNER_TOKEN;
-  require(/^[A-Za-z0-9_-]{1,64}$/.test(username ?? '') && /^[A-Za-z0-9_-]{43}$/.test(password ?? '') && /^[A-Za-z0-9_-]{43}$/.test(token ?? ''));
+  require(/^[A-Za-z0-9_-]{1,64}$/.test(username ?? '') && /^[\x21-\x7e]{8,128}(?![\s\S])/.test(password ?? '') && /^[A-Za-z0-9_-]{43}$/.test(token ?? ''));
   const day = new Date().toISOString().slice(0, 10);
   require(Date.now() % 86400000 < 86400000 - 180000);
   const auth = 'Basic ' + Buffer.from(username + ':' + password).toString('base64');

@@ -98,9 +98,11 @@ npm run demo:release:guard
 
 П’ять secret bindings: `COMMAND_HMAC_SECRET`, `IP_HMAC_SECRET`,
 `PARTNER_TOKENS` (JSON map для `demo-partner`), `REPORT_USERNAME`,
-`REPORT_PASSWORD`. HMAC/partner/password — незалежні 32 випадкові байти
-у canonical base64url (43 символи); username відповідає серверному
-контракту. Секрети генерує/зберігає оператор поза Git. Встановлюйте їх
+`REPORT_PASSWORD`. HMAC/partner — незалежні 32 випадкові байти
+у canonical base64url (43 символи). Report password за D-183 приймає
+8–128 друкованих ASCII без пробілів; старі 43-символьні паролі сумісні.
+Username відповідає серверному контракту. Єдиний опублікований виняток —
+пара звіту `demo` / `unicorn-demo`; решту секретів оператор зберігає поза Git. Встановлюйте їх
 через захищене середовище; не вставляйте значення в argv, чат чи лог.
 Початкове завантаження secret bindings виконується **після ініціалізації
 нової історії нижче**, до Worker deploy:
@@ -117,7 +119,11 @@ JS
 ```
 
 Pipe передає тільки stdin Wrangler. Не запускайте ліву частину окремо.
-Не міняйте чинні секрети при повторному deploy: це зламає HMAC/replay.
+Не міняйте HMAC/partner secrets при повторному deploy: це зламає HMAC/replay.
+Для погодженого D-183 змінюються лише `REPORT_USERNAME`/`REPORT_PASSWORD`
+разом із кодом через `wrangler deploy --secrets-file` і окремий ignored JSON
+з цими двома ключами. Відсутні в ньому secrets зберігаються; існуючі
+ресурси й міграції повторно не створюються.
 
 ## Міграції → початкова історія → schema gate
 

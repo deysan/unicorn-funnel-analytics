@@ -1,15 +1,17 @@
 import { Hono } from 'hono';
 import { parseReportQuery } from '../../shared/report';
 import { readFilters, readFunnel, readStatus } from '../report/read';
-import { decodeSecret, HttpFailure, ipKey, limit } from './security';
+import { HttpFailure, ipKey, limit } from './security';
 export type ReportBindings = Pick<Env, 'DB' | 'LOCAL_RUNTIME' | 'REPORT_IP_LIMITER' | 'REPORT_LIMITER' | 'ASSETS' | 'MOCK_RECEIVER_MODE'>
   & Partial<Pick<Env, 'IP_HMAC_SECRET' | 'REPORT_USERNAME' | 'REPORT_PASSWORD'>>;
 export function reportIdentity(request: Request, env: ReportBindings) {
   const username = env.REPORT_USERNAME;
-  let expectedPassword: Uint8Array<ArrayBuffer>;
+  let expectedPassword: Uint8Array;
   try {
     if (!username || !/^[a-zA-Z0-9_-]{1,64}(?![\s\S])/.test(username)) throw new Error();
-    expectedPassword = decodeSecret(env.REPORT_PASSWORD);
+    const password = env.REPORT_PASSWORD;
+    if (!password || !/^[\x21-\x7e]{8,128}(?![\s\S])/.test(password)) throw new Error();
+    expectedPassword = new TextEncoder().encode(password);
   } catch { throw new HttpFailure('temporarily_unavailable', 503, true); }
   try {
     if (new URL(request.url).protocol !== 'https:') throw new Error();
@@ -19,9 +21,9 @@ export function reportIdentity(request: Request, env: ReportBindings) {
     const index = decoded.indexOf(':');
     const suppliedName = new TextEncoder().encode(decoded.slice(0, index));
     const expectedName = new TextEncoder().encode(username);
-    const suppliedPassword = decodeSecret(decoded.slice(index + 1));
+    const suppliedPassword = new TextEncoder().encode(decoded.slice(index + 1));
     if (index < 0 || suppliedName.length !== expectedName.length || !crypto.subtle.timingSafeEqual(suppliedName, expectedName)
-      || !crypto.subtle.timingSafeEqual(suppliedPassword, expectedPassword)) throw new Error();
+      || suppliedPassword.length !== expectedPassword.length || !crypto.subtle.timingSafeEqual(suppliedPassword, expectedPassword)) throw new Error();
   } catch { throw new HttpFailure('unauthorized', 401); }
 }
 export const report = new Hono<{ Bindings: ReportBindings }>();

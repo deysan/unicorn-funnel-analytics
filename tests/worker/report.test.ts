@@ -103,6 +103,63 @@ const token=encodeSecret(new Uint8Array(32).fill(3));const allow={limit:async()=
 const bindings:ReportBindings={...env,IP_HMAC_SECRET:token,REPORT_USERNAME:'synthetic',REPORT_PASSWORD:token,REPORT_IP_LIMITER:allow,REPORT_LIMITER:allow,ASSETS:{fetch:async()=>new Response('<main>report</main>')} as unknown as Fetcher};
 const authorization='Basic '+btoa('synthetic:'+token);
 const request=(path='/api/v1/report/status',custom:ReportBindings=bindings,auth=authorization)=>report.request('https://localhost:5173'+path,{headers:{Authorization:auth}},custom);
+const demoBindings:ReportBindings={...bindings,REPORT_USERNAME:'demo',REPORT_PASSWORD:'unicorn-demo'};
+const demoAuthorization='Basic '+btoa('demo:unicorn-demo');
+it('public demo credentials read HTML, status, filters and funnel without cookies or business writes',async()=>{
+  const tables=['users','events','clicks','partner_events','user_offer_leads','request_results','event_delivery','mock_received_events','capacity_control','system_control','maintenance_control','cleanup_cursors'];
+  const state=()=>Promise.all(tables.map(async table=>(await db.prepare(`SELECT * FROM ${table}`).all()).results));
+  const before=await state();
+  for(const path of ['/report/','/api/v1/report/status','/api/v1/report/filters','/api/v1/report/funnel?from=2026-10-30&to=2026-10-30']) {
+    const response=await request(path,demoBindings,demoAuthorization);
+    expect(response.status).toBe(200);expect(response.headers.get('cache-control')).toBe('no-store');expect(response.headers.has('set-cookie')).toBe(false);
+  }
+  expect(await state()).toEqual(before);
+});
+it('report passwords accept the 8 and 128 character boundaries and printable ASCII punctuation',async()=>{
+  const printable=Array.from({length:94},(_,index)=>String.fromCharCode(0x21+index)).join('');
+  for(const password of ['!A:0_a~?','a'.repeat(128),printable]) {
+    const response=await request('/report/',{...demoBindings,REPORT_PASSWORD:password},'Basic '+btoa('demo:'+password));
+    expect(response.status).toBe(200);
+  }
+});
+for(const path of ['/report/','/api/v1/report/status']) {
+  it.each([
+    {label:'missing authorization',auth:undefined},
+    {label:'same-length wrong username',auth:'Basic '+btoa('deox:unicorn-demo')},
+    {label:'different-length wrong username',auth:'Basic '+btoa('other:unicorn-demo')},
+    {label:'same-length wrong password',auth:'Basic '+btoa('demo:unicorn-demx')},
+    {label:'shorter wrong password',auth:'Basic '+btoa('demo:short')},
+    {label:'longer wrong password',auth:'Basic '+btoa('demo:unicorn-demo-more')},
+    {label:'invalid base64 characters',auth:'Basic !!!!'},
+    {label:'invalid base64 length',auth:'Basic A'},
+    {label:'missing colon',auth:'Basic '+btoa('demounicorn-demo')},
+    {label:'HTTP',auth:demoAuthorization,protocol:'http:'},
+  ])(`demo Basic $label denies ${path} before private handlers and report limiter`,async({auth,protocol})=>{
+    const scope={limit:vi.fn(async()=>({success:true}))};
+    const assets={fetch:vi.fn(async()=>new Response('protected'))};
+    const prepare=vi.fn(db.prepare.bind(db));
+    const wrapped=new Proxy(db,{get(target,key){return key==='prepare'?prepare:Reflect.get(target,key);}});
+    const response=await report.request((protocol??'https:')+'//localhost:5173'+path,{headers:auth?{Authorization:auth}:{}},
+      {...demoBindings,DB:wrapped,REPORT_LIMITER:scope,ASSETS:assets as unknown as Fetcher});
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({error:{code:'unauthorized',message:'Звіт недоступний. Перевірте доступ і фільтри або повторіть пізніше.',retryable:false}});
+    expect(response.headers.get('www-authenticate')).toContain('Basic');expect(response.headers.get('cache-control')).toBe('no-store');expect(response.headers.has('set-cookie')).toBe(false);
+    expect(scope.limit).not.toHaveBeenCalled();expect(assets.fetch).not.toHaveBeenCalled();expect(prepare).not.toHaveBeenCalled();
+  });
+}
+it('invalid report password configuration fails safely before private handlers and report limiter',async()=>{
+  const scope={limit:vi.fn(async()=>({success:true}))};
+  const assets={fetch:vi.fn(async()=>new Response('protected'))};
+  const prepare=vi.fn(db.prepare.bind(db));
+  const wrapped=new Proxy(db,{get(target,key){return key==='prepare'?prepare:Reflect.get(target,key);}});
+  for(const password of [undefined,'','a'.repeat(7),'a'.repeat(129),'demo password','unicorn-demo\n','unicorn\tdemo','unicorn\0demo','unicorn\x7fdemo','unicorn-démo']) {
+    const response=await request('/api/v1/report/status',{...demoBindings,DB:wrapped,REPORT_PASSWORD:password,REPORT_LIMITER:scope,ASSETS:assets as unknown as Fetcher},demoAuthorization);
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({error:{code:'temporarily_unavailable',message:'Звіт недоступний. Перевірте доступ і фільтри або повторіть пізніше.',retryable:true}});
+    expect(response.headers.get('cache-control')).toBe('no-store');expect(response.headers.has('set-cookie')).toBe(false);
+  }
+  expect(scope.limit).not.toHaveBeenCalled();expect(assets.fetch).not.toHaveBeenCalled();expect(prepare).not.toHaveBeenCalled();
+});
 it('status shows current handler receiver mode without rewriting previous attempts',async()=>{
   await db.prepare("UPDATE maintenance_control SET cron_result='partial_failure', cron_errors_json='[\"delivery_items_failed\"]' WHERE singleton_id=1").run();
   const before=await db.prepare('SELECT * FROM maintenance_control').first();

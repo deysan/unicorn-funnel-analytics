@@ -2,9 +2,11 @@
 
 Оновлено: 2026-11-02. **Проєктування та M0–M6 завершено, демо розгорнуто.**
 Основа дизайну — D-001–D-179; реалізація й реліз — D-180–D-182.
-[Результат M6](m6-release-result.md): release SHA `01aaa04`, 571 Vitest,
+[Історичний результат M6 від 2026-11-01](m6-release-result.md): release SHA `01aaa04`, 571 Vitest,
 89 Playwright, типи/build і CI успішні; cloud smoke, Cron та recovery підтверджені.
-Пізніші документаційні коміти не змінюють release SHA. Джерела:
+Документаційні коміти не змінюють release SHA. Подальший D-183 додає
+публічну пару входу до чинного read-only звіту;
+[стан оновлення](bmad/implementation-artifacts/spec-public-report-login.md). Джерела:
 [вимоги](requirements.md), [рішення](decisions.md),
 [детальні контракти та історія](architecture-notes.md), [сценарії](scenarios.md).
 Завершена послідовність — [implementation plan](implementation-plan.md);
