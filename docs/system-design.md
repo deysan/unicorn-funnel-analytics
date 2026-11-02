@@ -4,9 +4,10 @@
 Основа дизайну — D-001–D-179; реалізація й реліз — D-180–D-182.
 [Історичний результат M6 від 2026-11-01](m6-release-result.md): release SHA `01aaa04`, 571 Vitest,
 89 Playwright, типи/build і CI успішні; cloud smoke, Cron та recovery підтверджені.
-Документаційні коміти не змінюють release SHA. Подальший D-183 додає
-публічну пару входу до чинного read-only звіту;
-[стан оновлення](bmad/implementation-artifacts/spec-public-report-login.md). Джерела:
+D-183 виконано 2026-11-02: чинний deploy **`2ba32c3`**, публічна пара
+`demo` / `unicorn-demo`, 611 Vitest / 89 Playwright та CI успішні.
+[Фактичні перевірки](m6-release-result.md#оновлення-доступу-2026-11-02).
+Документаційний коміт після deploy не змінює версію Worker. Джерела:
 [вимоги](requirements.md), [рішення](decisions.md),
 [детальні контракти та історія](architecture-notes.md), [сценарії](scenarios.md).
 Завершена послідовність — [implementation plan](implementation-plan.md);

@@ -2,7 +2,7 @@
 title: 'Публічна пара доступу до чинного звіту'
 type: 'chore'
 created: '2026-11-02'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: '96d297e124479e1b4884e33014e87cad1347ab3e'
@@ -146,7 +146,8 @@ Deploy і перевірка браузерного входу будуть за
 
 Edge-case: `[]`; verification-gap: `No verification gaps found.`
 Усі три шари виконані в незалежних контекстах. Project override застосовано:
-квоти проблем немає. Публічний deploy і браузерна перевірка ще попереду.
+квоти проблем немає. На момент завершення рев’ю deploy і браузерна
+перевірка ще були попереду; підсумок виконання наведено в кінці документа.
 
 ## Verification
 
@@ -160,3 +161,15 @@ API timingSafeEqual і deploy secrets-file звірено з офіційною 
 2026-11-02: [Web Crypto](https://developers.cloudflare.com/workers/runtime-apis/web-crypto/#timingsafeequal),
 [Secrets](https://developers.cloudflare.com/workers/configuration/secrets/#upload-secrets-alongside-code).
 Types 5.20261102.1 прочитано в /tmp без зміни залежностей проєкту.
+
+
+## Результат deploy
+
+2026-11-02 виконано: release `2ba32c3ad3b747dc8848394b600a143a54a9a568`,
+CI run `41422823606` success (611 Vitest / 89 Playwright), Worker version
+`977cd360-8b62-4225-8179-3ae334a4d5c9`, 100%, 09:48:42 UTC.
+Нова пара дала 200 HTML/status/filters/funnel, стара/хибна та відсутня — 401.
+Chrome відобразив актуальний звіт; no-store/no-cookie, normal, Cron complete,
+порожня черга, без пауз/помилок, історія confirmed. Нових бізнес-дій агента немає.
+Фінальний запис — docs-only після deploy; GitHub PRIVATE, нових ресурсів немає.
+[Повні факти й межі перевірки](../../m6-release-result.md#оновлення-доступу-2026-11-02).

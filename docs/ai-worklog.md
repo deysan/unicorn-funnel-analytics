@@ -1086,3 +1086,11 @@ Billing після recovery — Workers Free Active, upgrade не виконан
   [Специфікація та фактичні докази](bmad/implementation-artifacts/spec-public-report-login.md).
 - **Межі:** cloud перевірки цього оновлення лише читанням; cloud quiz,
   постбеки, міграції, ручний Cron, outage та restore не входять у доручення.
+
+
+AI-037 завершено: deploy `2ba32c3`, локально й у CI 611 Vitest / 89 Playwright,
+успішні artifact/schema gates; нова пара працює, стара відхиляється.
+Chrome відобразив звіт, cloud GET підтвердили normal/Cron/історію й відсутність
+пауз/помилок. [Точні SHA, version і спостереження](m6-release-result.md#оновлення-доступу-2026-11-02).
+Окремий docs-only коміт після deploy зберігає ці докази; повні тести через
+його текстові правки не повторювали. Репозиторій PRIVATE, історія збережена.
