@@ -61,7 +61,7 @@ HTTP повертає безпечний error envelope і no-store, без SQL/
 
 ## CLI та перевірка
 
-[README](../README.md#локальна-демонстрація-партнерських-подій) містить
+[README](development.md#локальна-демонстрація-партнерських-подій) містить
 команди Lead → повернення bypass → Purchase → повтор → друга Purchase →
 конфлікт старого ID. `npm run partner -- prepare` створює незмінний JSON
 у `.wrangler/partner-events`, без overwrite. `send` бере секрет лише env,

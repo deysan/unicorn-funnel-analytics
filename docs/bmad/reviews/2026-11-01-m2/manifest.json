@@ -12,7 +12,7 @@
   "overrides": "_bmad/custom/bmad-review.toml",
   "no_finding_quota": true,
   "source_checked_on": "2026-11-01",
-  "source_url": "https://docs.google.com/document/d/1gitcbjFaNR_rz8BGErQgLVJqi2njv494-tsCNPPIbRY/edit",
+  "source_file": "../../../task.md",
   "findings": 4,
   "unique_issues": 3,
   "unresolved_findings": 0,

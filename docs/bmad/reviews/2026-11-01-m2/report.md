@@ -11,7 +11,7 @@
 
 ## Джерела та метод
 
-- [Оригінальне ТЗ](https://docs.google.com/document/d/1gitcbjFaNR_rz8BGErQgLVJqi2njv494-tsCNPPIbRY/edit)
+- [Оригінальне ТЗ](../../../task.md)
   повторно прочитано через Google Drive 2026-11-01; modified time джерела
   `2026-10-26T17:41:23.823Z`. Розбіжності з каталогом і FR у requirements не виявлено.
 - [Вимоги](../../../requirements.md), [рішення D-001–D-181](../../../decisions.md),

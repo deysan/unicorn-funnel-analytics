@@ -1,6 +1,13 @@
 # План реалізації MVP
 
-Оновлено: 2026-11-01. За D-181 локальний каркас M0 створено й перевірено.
+Оновлено: 2026-11-02. **M0–M6 завершено; демо розгорнуто.**
+Фінальний release SHA `01aaa04`: 571 Vitest + 89 Playwright, типи/build,
+CI, cloud smoke, Cron і recovery успішні — [результат M6](m6-release-result.md).
+Документаційний `fb8a582` та наступний пакет не є розгорнутим SHA.
+
+## Історія виконання — 2026-10-31–2026-11-01
+
+Нижче числа належать своїм етапам. За D-181 локальний каркас M0 створено й перевірено.
 Vitest у Node та Worker/D1 налаштовано; 13 перевірок і 21 браузерний тест
 у п’яти конфігураціях пройшли локально й у
 [GitHub Actions](https://github.com/deysan/unicorn-funnel-analytics/actions/runs/41192836436)
@@ -31,9 +38,7 @@ M4 завершено локально: [Cron та доставка](m4-delivery
 закрив зауваження; фінальний check — 517 Vitest, 89 Playwright, типи/build, exit 0.
 M5 завершено локально: [звіт і пакет здачі](m5-report.md),
 [фінальний BMAD-аудит](bmad/reviews/2026-11-01-m5/report.md),
-534 Vitest, 89 Playwright, типи/build — exit 0. Для одного попереднього
-Q1 503 власник дозволив [обмежений виняток D-111](m4-q1-incident.md)
-після доказової діагностики; причину не вигадано.
+534 Vitest, 89 Playwright, типи/build — exit 0.
 M6 завершено: [фактичний реліз](m6-release-result.md), 571 Vitest,
 89 Playwright, типи/build та CI release SHA `01aaa04` успішні.
 Одне demo на Workers Free/D1: schema gate, cloud smoke, реальний Cron,

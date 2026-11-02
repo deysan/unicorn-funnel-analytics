@@ -152,7 +152,7 @@ ACK last_ack_at assertions зі distinct timestamps та один safe Cron summ
 **63/63**, exit 0. Повні тести/typecheck/build тут не повторювалися —
 їх запускає координатор після повернення patch. Diff-check exit 0.
 `has_more` описує raw traversal; TTL дозволяє очищення, не гарантує фізичне
-стирання саме в момент deadline. D-111 залишається відкритим.
+стирання саме в момент deadline.
 
 Original blind reviewer повторно прочитав raw-window/cursor/index зміни та
 regressions: початковий finding закрито, залишкових проблем у його межах
@@ -169,14 +169,6 @@ Reviewers тестів повторно не запускали; implementation 
 Фінальна перевірка: `CI=true npm run check` exit 0,
 503 Vitest + 89 Playwright, типи/build пройшли. 514 локальних посилань валідні,
 226 repo/client файлів без збігів із секретами; diff-check пройшов.
-Status лишається in-review через попередній незакритий D-111 generic 503;
-поточні passes не доводять причину чи виправлення. Без commit/push/deploy.
-
-Наступне доручення власника дозволило одноразовий виняток для цього
-інциденту, якщо bounded діагностика не знайде причину. Перевірено 84/84,
-production-код не змінено; причина невідома. [Звіт і межі дозволу](../../m4-q1-incident.md).
-Поточний status — ready-for-final-audit, загальне D-111 не послаблено.
-
 ## Підсумковий аудит M4 — 2026-11-01
 
 Умови етапу виконано, підтверджені findings закрито. Фінальний check:

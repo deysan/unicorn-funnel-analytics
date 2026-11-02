@@ -10,7 +10,7 @@
 
 ## Джерела та метод
 
-[ТЗ](https://docs.google.com/document/d/1gitcbjFaNR_rz8BGErQgLVJqi2njv494-tsCNPPIbRY/edit)
+[ТЗ](../../../task.md)
 звіряємо через [вимоги](../../../requirements.md); оригінал повторно
 прочитано цього ж дня під час [аудиту M2](../2026-11-01-m2/report.md).
 [Рішення](../../../decisions.md), [сценарії](../../../scenarios.md) та

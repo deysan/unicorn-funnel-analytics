@@ -3,7 +3,7 @@
   "scope": "D-026–D-031: architecture foundation",
   "head": "ffbe9135ccef9a0a2a84f91f3dff4ac4558f0462",
   "staged_diff_sha256": "26682e02b234c2827b360b83bc4e398c903a36add0da38d50e8065e5eabe06b0",
-  "source_url": "https://docs.google.com/document/d/1gitcbjFaNR_rz8BGErQgLVJqi2njv494-tsCNPPIbRY/edit",
+  "source_file": "../../../task.md",
   "source_fetched": "2026-10-29",
   "source_evidence": "Source excerpt from the earlier scenarios audit input; not re-fetched in this audit",
   "source_sha256": "2a7737b5247e4e1c04778c197d20b3198513d14cda9cb36cb33ecd26b32f5654",

@@ -1,0 +1,226 @@
+# Локальний запуск і технічна перевірка
+
+Актуалізовано 2026-11-02. [Швидкий огляд і хмарне демо](../README.md),
+[покроковий сценарій](demo-walkthrough.md). Команди нижче призначені для
+локального відтворення; під час підготовки документації їх не запускали.
+
+## Локальний запуск
+
+Потрібні Node **24.22.2** і npm **11.19.1**. Через наявний nvm:
+
+```sh
+nvm install
+nvm use
+npm ci
+npm run dev
+```
+
+Без nvm встановіть ці самі версії своїм менеджером середовища.
+`.nvmrc` фіксує Node, а `.npmrc` відхиляє несумісні версії Node/npm.
+Відкрийте <https://localhost:5173>: «Жінки» → «Азія» → синтетичний
+email (наприклад, `Synthetic@example.test`) → пропозиція 003.
+Назва, URL і ClickID показуються без переходу на зовнішній сайт.
+HTTP-адаптер результату B перевіряється окремо: 303, Location зі збереженим
+ClickID і відсутність зовнішніх запитів. Публічний демо-API повертає JSON.
+Технічна перевірка з’єднання з D1 збережена на `/diagnostics`.
+
+`dev` створює лише відсутні стабільні секрети у ignored `.dev.vars`,
+локальний self-signed TLS-сертифікат у `.wrangler/tls` (потрібен OpenSSL)
+та додавально застосовує міграції 0001–0005 до `.wrangler/state`.
+Дані не скидаються. Окремо доступний `npm run setup:local`.
+Для ручного запуску браузер попросить прийняти локальний сертифікат.
+HTTPS потрібен для Secure cookie в WebKit; захисні атрибути не послаблено.
+
+Cloudflare login і створення хмарної бази для цього запуску не потрібні.
+Binding `DB` має `remote: false`, локальні дані зберігаються в `.wrangler/`
+і не потрапляють у Git. `database_id` у конфігу — локальний ідентифікатор;
+хмарну базу цей local setup не створює. Команди ручного релізу —
+у [M6 runbook](m6-release.md), з окремими gates.
+
+## Локальна демонстрація партнерських подій
+
+Залиште `npm run dev` працювати; виконайте квіз і скопіюйте ClickID.
+В іншому терміналі підготуйте середовище. `PARTNER_TOKENS` містить чинні
+серверні доступи; CLI отримує тільки токен одного партнера через env.
+Команди нижче не виводять секрет і не передають його в argv або URL:
+
+```sh
+export PARTNER_TOKEN="$(node --env-file=.dev.vars -p 'JSON.parse(process.env.PARTNER_TOKENS)["demo-partner"]')"
+export NODE_EXTRA_CA_CERTS="$PWD/.wrangler/tls/cert.pem"
+CLICK_ID='вставте-ClickID-із-квізу'
+
+npm run partner -- prepare --file lead.json --type Lead --click "$CLICK_ID"
+npm run partner -- send --file lead.json --target https://localhost:5173
+```
+
+Відкрийте свіжий `/` у тому самому браузері: Lead для 003 дає bypass
+без нового квізу/email. Далі — Purchase, точний повтор, друга Purchase
+і конфлікт першого ID зі зміненою сумою:
+
+```sh
+PURCHASE_ID="$(node -p 'crypto.randomUUID()')"
+PURCHASE_AT="$(node -p 'new Date().toISOString()')"
+npm run partner -- prepare --file purchase.json --type Purchase --click "$CLICK_ID" --id "$PURCHASE_ID" --at "$PURCHASE_AT" --amount-minor 2500 --currency USD
+npm run partner -- send --file purchase.json --target https://localhost:5173
+npm run partner -- send --file purchase.json --target https://localhost:5173
+npm run partner -- prepare --file purchase-2.json --type Purchase --click "$CLICK_ID" --amount-minor 2500 --currency USD
+npm run partner -- send --file purchase-2.json --target https://localhost:5173
+npm run partner -- prepare --file conflict.json --type Purchase --click "$CLICK_ID" --id "$PURCHASE_ID" --at "$PURCHASE_AT" --amount-minor 2600 --currency USD
+npm run partner -- send --file conflict.json --target https://localhost:5173
+unset PARTNER_TOKEN
+```
+
+Успіх друкує `accepted`; останній send повертає `postback_conflict` і
+ненульовий exit code. Два різні Purchase рахуються як окремі події;
+повтор не змінює даних. Результати доступні у закритому звіті нижче. `prepare` створює файл
+у ignored `.wrangler/partner-events/` і відмовляє, якщо він уже існує.
+Для нової демонстрації використайте нові назви файлів. `send` завжди
+читає ті самі байти; нові ID/час створюються тільки через `prepare`.
+Після мережевої помилки явно повторіть `send` того самого файла.
+Лише 429 `rate_limited` / 503 `rate_limit_unavailable` мають до трьох
+автоматичних повторів із Retry-After або 60/30s та jitter 0–10%.
+Мережеве очікування обмежено 10s на запит. HTTPS/TLS перевіряються,
+redirect не виконується. CLI не змінює D1 напряму й не відкриває партнера.
+
+## Закритий локальний звіт
+
+Відкрийте [звіт](https://localhost:5173/report/). Браузер попросить
+Basic Auth: значення `REPORT_USERNAME` і `REPORT_PASSWORD` містяться
+тільки у локальному ignored `.dev.vars`. Setup генерує їх лише за
+відсутності; не додавайте їх до URL, Git або клієнтського коду.
+Звіт не поновлює cookie/профіль. Початковий період — поточний UTC-день
+за серверним часом; фільтри застосовуються кнопкою і зберігаються в URL.
+Квіз не змінюється від фільтра офера. Покупки та унікальні покупці —
+окремі числа; конверсії враховують також пізні результати своїх ClickID.
+
+Повна історія **нової** persistence підтверджується перед першим запуском
+сервера: setup доводить відсутність D1 storage до міграцій і guarded SQL
+атомарно записує UTC-день. Наявна dev-база з відсутніми метаданими
+залишається без бізнес-чисел; setup не вигадує дату, не очищує дані й
+не знімає `history_unverified`. Для неї потрібне [окреме доказове підтвердження
+повноти](report-operations.md). Ізольований E2E доводить повний шлях на новій тестовій історії.
+Не видаляйте dev persistence заради нульового звіту.
+
+API: `/api/v1/report/funnel?from=YYYY-MM-DD&to=YYYY-MM-DD` з опційними
+`preland_id`/`offer_id`; `/api/v1/report/status` і `/api/v1/report/filters`
+без параметрів. HTML/API мають `no-store`, окремі IP300/min і спільний
+report30/min ліміти. Локальний adapter призначено для localhost; хмарне демо використовує окремий edge adapter M6.
+Автооновлення — через 60s після завершення спроби у видимій вкладці;
+помилка або недоступна історія приховує числа. [Cron/очищення](m4-retention.md)
+та імітатор експорту працюють локально й у хмарному демо M6. Технічний стан показує фактичні
+counts, capacity alerts, Cron/ACK, безпечні помилки й підсумки обслуговування.
+[Контракт і межі](m2-report-contract.md), [реалізація й перевірки](m2-report.md).
+
+## Перевірка
+
+```sh
+npx playwright install chromium firefox webkit
+npm run check
+```
+
+`check` генерує типи Worker з конфігу, перевіряє TypeScript (включно з
+тестами), виконує Vitest, збирає клієнт і Worker та виконує браузерну матрицю
+проти локального preview збірки.
+Перед перевіркою створюються лише відсутні локальні секрети/TLS-файли.
+Повний smoke розділений на базовий Chromium, решту матриці, M3, аудит,
+concurrency, CLI та дві report-групи з окремим запуском
+тестової persistence для кожної групи; реальні rate limits незмінні.
+Порт 4173 має бути вільним; тест сам запускає й зупиняє preview.
+Окремо доступні `npm run typecheck`, `npm run build` і `npm run test:smoke`
+(останній потребує попередньої збірки). Для ручного перегляду збірки —
+`npm run preview` на <https://localhost:4173> після `npm run setup:local` і build.
+
+Фінальний локальний `CI=true npm run check` для release SHA `01aaa04`:
+**571 Vitest + 89 Playwright**, типи/build — exit 0. [CI того самого SHA](https://github.com/deysan/unicorn-funnel-analytics/actions/runs/41348201985)
+успішний; [докази M6](m6-release-result.md). Це результати 2026-11-01;
+документаційна перевірка 2026-11-02 повні тести не повторювала.
+Playwright використовує окрему `.wrangler/e2e-state`, що очищується перед
+прогоном; dev-база не змінюється. Синтетичні профілі створює приватний
+Node setup без публічних test/admin endpoints.
+Конфіг локального runtime використовує `compatibility_date: 2026-10-30`:
+встановлений workerd ще не підтримує 2026-10-31.
+
+## Vitest
+
+Окремі запуски без браузера:
+
+```sh
+npm run test:unit
+npm run test:worker
+npm test
+npm run test:watch
+```
+
+`unit` запускає чисті перевірки в Node: shared-контракт і HMAC команд.
+Додано правила вибору офера, email-нормалізацію та контракти recovery.
+`worker` виконується в локальному workerd:
+реальний D1 binding для HTTP/SQL та контрольований збій binding для 503.
+Звичайний `npm test` запускає обидва набори, `test:watch` — режим розробки.
+Автоматичних повторів і успіху при порожньому наборі немає.
+
+Vitest створює окреме тестове сховище для кожного Worker-файла й не
+використовує dev-базу `.wrangler/`. Усередині одного файла очищення
+тестових таблиць виконується явно в `beforeEach`; залежні від такої
+фікстури тести не запускаємо через `it.concurrent`. Синтетичні таблиці
+каркаса відокремлені від бізнес-міграцій. Файли `isolation-a/b` перевіряють ізоляцію
+на однаковому імені таблиці без взаємного очищення.
+
+Міграції 0001–0005 перевіряються у справжній ізольованій D1:
+CHECK/UNIQUE/FK, rollback цілого batch, ключі/результати, конкурентні
+зміни, бюджети, атомарний ClickID і партнерські події. Каталог
+перевіряється до Vite/build; некоректний конфіг зупиняє весь запуск.
+Звіт перевіряється числовою SC-14, часовими межами, фільтрами й
+відмовами доступу/метаданих. Історія доказів — у
+[протоколі M1](m1-command-protocol.md) і [аудиті M2](bmad/reviews/2026-11-01-m2/report.md).
+
+## Браузерна матриця й CI
+
+| Проєкт | Обсяг | Емуляція |
+|---|---|---|
+| chromium | Усі браузерні тести | Desktop Chrome |
+| firefox | `@critical` | Desktop Firefox |
+| webkit | `@critical` | Desktop Safari |
+| mobile-chromium | `@critical` | Pixel 7, 412×839 |
+| mobile-webkit | `@critical` | iPhone 13, 390×664 |
+
+Мобільні проєкти — емуляція Playwright, не реальні телефони; WebKit не є
+перевіркою встановленого Safari. Зараз перевіряємо зв’язок UI → Worker → D1,
+помилку мережі/повтор, невалідну відповідь і доступність кнопки без
+горизонтального прокручування. API 404 додатково перевіряється в Chromium.
+Підключені квіз/A/B, reload результату, Back, storage/network recovery
+та bootstrap двох вкладок. Звіт перевіряє серверний HTML/API gate,
+URL/refresh/visibility/error і справжній CLI → D1 → покупки/покупців.
+
+Браузерні тести імпортують `test`/`expect` із `tests/smoke/fixtures.ts`.
+Він ізолює app-data Firefox на macOS і прибирає тимчасові каталоги після
+закриття браузера. Критичні для сумісності сценарії позначаємо `@critical`.
+Окремий запуск: `npm run test:smoke -- --project=firefox` після збірки.
+Повна перевірка перед фіксацією — `npm run check`; пропуски/падіння
+обов’язкових тестів не зараховуємо як успіх. Автоматичних повторів немає.
+
+[CI](../.github/workflows/ci.yml) на стандартному `ubuntu-24.04` запускається
+для PR/push у `master` та вручну. Зміни лише `docs/**`/Markdown не запускають
+обчислювальний job. Один job до 15 хвилин виконує `npm ci`, встановлює
+браузери із системними бібліотеками та запускає `npm run check`.
+Застарілі запуски того самого PR/гілки скасовуються; `test.only` у CI заборонено.
+Логи містять SHA фактично перевіреного checkout, включно з merge SHA для PR.
+Кеш і завантаження артефактів не ввімкнені; діагностика є в журналі run.
+Секрети Cloudflare, доступ до демо-D1, міграції та deploy у workflow відсутні.
+
+Free-передумови D-177 повторно перевірено 2026-11-01: Actions доступні, включена
+квота є, доплати заблоковані нульовим бюджетом. Перед майбутнім хмарним
+використанням повторно звіряємо актуальні умови. При вичерпаній квоті —
+локальна перевірка конкретного SHA з явною позначкою, що CI не виконувався.
+
+## Структура
+
+- `src/client` — React-сторінка та звернення до API.
+- `src/server` — Hono Worker і прямий SQL через D1 binding.
+- `src/shared` — безпечні для браузера контракти квізу, постбеків і звіту.
+- `tests/smoke` — квіз, recovery, CLI/постбеки та закритий звіт у браузерах.
+- `tests/unit` — чисті перевірки у Node (`vitest.unit.config.ts`).
+- `tests/worker` — HTTP/D1 у Workers runtime (`vitest.worker.config.ts`).
+
+Дозволені імпорти: client → shared, server → shared. Серверні конфігурації
+та секрети не належать shared або клієнтському bundle. Згенерований
+`src/server/worker-configuration.d.ts` відновлюється через `npm run types`.

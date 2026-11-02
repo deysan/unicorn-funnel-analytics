@@ -32,7 +32,6 @@
     "build": "passed",
     "exit_code": 0
   },
-  "scoped_exception": "docs/m4-q1-incident.md; unknown past Q1 503, explicit owner waiver; no new failures waived",
   "result": "M4 complete locally; M5/M6 remain",
   "push": false,
   "deploy": false

@@ -3,10 +3,13 @@
 Дата підключення й перевірки: 2026-10-29.
 Підстава: власник попросив застосувати BMAD для аудиту плану та подальшої роботи.
 
-Поточний стан на 2026-11-01: власник перейшов до реалізації; M0–M5
-завершено локально. [Аудит M5](reviews/2026-11-01-m5/report.md) застосовує
+Поточний стан на 2026-11-02: M0–M6 завершено, [демо розгорнуто](../m6-release-result.md). [Аудит M5](reviews/2026-11-01-m5/report.md) застосовує
 adversarial, edge-case-hunter та verification-gap до коду й тестів.
-Історичний порядок підключення нижче не скасовує цього доручення.
+Порядок підключення нижче, implementation-artifacts і reviews — історичні
+артефакти станом на дати відповідних етапів, не поточні статуси M6.
+Після редакційної підготовки 2026-11-02 посилання ведуть на локальне ТЗ;
+історичні SHA/хеші manifest описують початковий вхід рев’ю, а не нові байти
+редагованої документації. Нового BMAD-рев’ю цей пакет не заявляє.
 
 ## Версія і встановлення
 
@@ -19,7 +22,7 @@ Codex: 29 skills у `.agents/skills/`. Глобальні skills не встан
 - [README стабільної гілки](https://github.com/bmad-code-org/BMAD-METHOD/blob/V6.12/README.md).
 - [Інсталятор та параметри, перевірений commit](https://github.com/bmad-code-org/BMAD-METHOD/blob/bab9082c3e884e0d72c759bcd1a6d90bcc01be84/tools/installer/commands/install.js).
 - [BMAD Review, перевірений commit](https://github.com/bmad-code-org/BMAD-METHOD/blob/bab9082c3e884e0d72c759bcd1a6d90bcc01be84/src/core-skills/bmad-review/SKILL.md).
-- [Реєстр npm, версія 6.12.4](https://www.npmjs.com/package/bmad-method/v/6.12.4).
+- [Реєстр npm, версія 6.12.4](https://registry.npmjs.org/bmad-method/6.12.4).
 
 Контрольна сума пакета з npm (`dist.integrity`):
 `sha512-DBVws7H1NxpSOhv2DHvLEHTceQGCv9c+gBx/1cnVF38WhlN70854SnHUUCHkTuLIalu6hq/7LRVtAWCNHmnFEw==`.
