@@ -142,6 +142,7 @@ test('labeled conversions show distinct pairs, rounded thirds and remaining shar
 });
 test('technical state truthfully shows unknown, thresholds, stale Cron, delayed delivery and phase failures @report',async({page})=>{
  await mock(page);await page.goto('/report/?from='+day+'&to='+day);
+ await page.getByRole('button',{name:'Технічний стан',exact:true}).click();
  await expect(page.getByText('Режим імітатора поточного обробника: normal.',{exact:false})).toBeVisible();
  await expect(page.getByText('Cron: ще немає даних',{exact:false})).toBeVisible();
  const failed={...status,receiver_mode:'unavailable',delivery:{...status.delivery,pending:1,oldest_age_ms:900_001,delayed:true,errors:[{code:'timeout',count:1}]},
@@ -154,4 +155,59 @@ test('technical state truthfully shows unknown, thresholds, stale Cron, delayed 
  await expect(page.getByText('· затримка понад 15 хв',{exact:false})).toBeVisible();await expect(page.getByText('· помилка очищення',{exact:false})).toBeVisible();
  await page.route('**/api/v1/report/status',route=>route.fulfill({status:503,json:{code:'temporarily_unavailable',retryable:true}}));await page.getByRole('button',{name:'Оновити',exact:true}).click();
  await expect(page.getByText('Cron: часткова невдача',{exact:false})).toHaveCount(0);await expect(page.getByText('Технічний стан недоступний.',{exact:true})).toBeVisible();
+});
+
+test('report sections preserve draft and URL without extra requests @report @critical', async ({page}, info) => {
+  await mock(page); await page.goto('/report/');
+  await expect(page.getByTestId('purchases')).toHaveText('2');
+  await expect(page.getByRole('button', {name:'Оновити', exact:true})).toBeEnabled();
+  await page.getByRole('combobox', {name:'Офер', exact:true}).selectOption('003');
+  const url = page.url();
+  const calls: string[] = [];
+  page.on('request', r => { if (r.url().includes('/api/v1/report/')) calls.push(r.url()); });
+  await page.getByRole('button', {name:'Технічний стан', exact:true}).click();
+  await expect(page.getByRole('button', {name:'Технічний стан', exact:true})).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('heading', {name:'Доставка подій'})).toBeVisible();
+  await expect(page.getByTestId('report-metrics')).toBeHidden();
+  await page.getByRole('button', {name:'Огляд воронки', exact:true}).click();
+  await expect(page.getByRole('combobox', {name:'Офер', exact:true})).toHaveValue('003');
+  await expect(page.getByText('Є незастосовані зміни.', {exact:false})).toBeVisible();
+  await expect(page.getByTestId('purchases')).toHaveText('2');
+  expect(page.url()).toBe(url); expect(calls).toHaveLength(0);
+  if ((page.viewportSize()?.width ?? 0) <= 640) {
+    await expect(page.getByText('Прокрутіть таблицю вправо, щоб побачити конверсії.')).toBeVisible();
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({path:`test-results/redesign-report-${info.project.name}.png`,fullPage:true});
+});
+
+test('report failures and technical warnings remain visible across sections @report', async ({page}) => {
+  await mock(page); await page.goto('/report/');
+  await expect(page.getByTestId('purchases')).toHaveText('2');
+  await page.route('**/api/v1/report/status', route => route.fulfill({json:{...status,integrity_paused:true,pause_reason:'integrity'}}));
+  await page.getByRole('button', {name:'Оновити', exact:true}).click();
+  await expect(page.getByText('Технічний стан потребує уваги.', {exact:false})).toBeVisible();
+  await page.route('**/api/v1/report/status', route => route.abort());
+  await page.getByRole('button', {name:'Оновити', exact:true}).click();
+  await expect(page.getByText('Технічний стан недоступний.', {exact:true})).toBeVisible();
+  await expect(page.getByText('Технічний стан потребує уваги.', {exact:false})).toHaveCount(0);
+  await page.getByRole('button', {name:'Технічний стан', exact:true}).click();
+  await page.route('**/api/v1/report/funnel?*', route => route.abort());
+  await page.getByRole('button', {name:'Оновити', exact:true}).click();
+  await expect(page.getByText('Не вдалося прочитати звіт.', {exact:false})).toBeVisible();
+  await expect(page.getByText('Технічний стан недоступний.', {exact:true})).toBeVisible();
+  await page.getByRole('button', {name:'Огляд воронки', exact:true}).click();
+  await expect(page.getByTestId('report-metrics')).toHaveCount(0);
+});
+
+test('zero-denominator conversions show no data without a misleading meter @report', async ({page}) => {
+  await mock(page);
+  const empty = funnel();
+  empty.metrics.quiz.conversions.questions.preferred_gender = {numerator:0, denominator:0};
+  await page.route('**/api/v1/report/funnel?*', route => route.fulfill({json:empty}));
+  await page.goto('/report/');
+  const row = page.getByRole('row').filter({has:page.getByRole('rowheader', {name:'Вподобання', exact:true})});
+  await expect(row.getByRole('cell').nth(2).locator('strong')).toHaveText('немає даних');
+  await expect(row.locator('meter')).toHaveCount(0);
+  await expect(page.locator('meter')).toHaveCount(2);
 });
