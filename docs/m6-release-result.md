@@ -1,5 +1,52 @@
 # M6 — фактичний результат ручного релізу
 
+## Редизайн 2026-11-06
+
+**Чинний deploy:** `c1880d113ae3a755f6fdf0cba8fbbb453764b281` за D-187.
+Оновлено оформлення квізу та звіту; бізнес-логіка, контролери, API,
+схема й залежності незмінні. GitHub public; історію збережено.
+
+- [CI точного SHA](https://github.com/deysan/unicorn-funnel-analytics/actions/runs/42232176457):
+  **success**, 611 Vitest / 96 Playwright, типи та build; ті самі підсумки
+  отримано локально. [Реалізація й рев’ю](bmad/implementation-artifacts/spec-ui-redesign.md).
+- Worker version `8b2958e9-c17a-413c-acd1-20eb5c89ae62`, **100%**;
+  deployment `364d3f94-444a-480c-8a14-3d923a1ff4a8`, **14:20:17 UTC**.
+- Ті самі `unicorn-demo`, D1, сім limiter bindings і Cron `* * * * *`.
+  API до/після підтвердив ті самі bindings, п’ять secrets і runtime vars.
+  Секрети не передавали й не ротували, міграцій не виконували.
+- Dashboard перед deploy: **Workers Free / Active**. Billing API через
+  OAuth недоступний (403); права не розширювали, upgrade не виконували.
+- Config, artifact/hash/clean-SHA guard, приватний secret scan, dry-run
+  та read-only schema gate — успішні. Перше повільне локальне складання
+  перервано; залежності відновлено offline за незмінним lockfile,
+  після чого повна релізна збірка й перевірки артефакту пройшли.
+
+Перевірка **14:21–14:23 UTC**, лише читання:
+
+| Перевірка | Результат |
+|---|---|
+| Health | 200, server/database ok |
+| Звіт і API | `demo` / `unicorn-demo`: HTML/status/filters/funnel — 200; без пароля й з хибним — 401 |
+| Кеш / cookie | Перевірені HTML/API GET — `no-store`, без `Set-Cookie` |
+| Клієнтські assets | SHA-256 завантажених CSS і JS збігаються з release bundle |
+| Інтерфейс | Chrome: огляд ↔ технічний стан, 1440/390 px без overflow; page errors і сторонні/записувальні запити відсутні |
+| Стан | normal, pending/in-flight=0, без integrity/history пауз, delivery/Cron errors=[] |
+| Cron | complete, stale=false; природний успіх 14:20:32.993 → 14:22:37.848 UTC |
+| Історія | confirmed від 2026-11-01; 2026-10-31 — period_unavailable без чисел |
+| Статистика 2026-11-01 | 2 входи/початки/завершення/переходи, 1 bypass/Lead/покупець, 3 покупки |
+
+Новий [скріншот README](images/report-demo.png) знято з розгорнутого
+звіту **14:21:33 UTC**, період 2026-11-01; візуально перевірено.
+Квіз і постбеки в хмарі не запускали, дані не скидали, ручного Cron,
+outage/recovery та restore не виконували. Browser-перевірка обмежувала
+запити своїм origin і read-only маршрутами звіту/assets.
+Документаційний коміт після deploy містить README, знімок і ці докази;
+він не змінює розгорнутий SHA. Записи нижче — історичні результати.
+
+Команди звірено 2026-11-06 із установленим Wrangler 4.156.0 та
+[офіційною документацією deploy](https://developers.cloudflare.com/workers/wrangler/commands/workers/#deploy).
+
+
 ## Оновлення доступу 2026-11-02
 
 **Виконано:** чинний звіт відкривається з `demo` / `unicorn-demo`.
