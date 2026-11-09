@@ -85,6 +85,23 @@ it('empty available period has zeroes; missing/invalid metadata throws without i
   await db.prepare('UPDATE system_control SET history_unverified=0,history_available_from=?').bind(today).run();
   expect(await readFunnel(db,query,today)).toMatchObject({report_status:'unavailable',reason:'period_unavailable',available_from:'2026-10-31'});
 });
+it('filtered empty relations preserve every zero metric even when other prelands have completed conversions',async()=>{
+  const email=await view();const completion=await event({type:'answer_confirmed',question:'email',view:email});
+  const click=await transition({flow:'quiz',completion});
+  await event({type:'Lead',click,offer:'003'});await event({type:'Purchase',click,offer:'003'});
+  const zero={numerator:0,denominator:0};
+  const emptyOffers={activity:{transitioned:0,bypass:0,leads:0,buyers:0,purchases:0},
+    conversions:{transition_lead:zero,transition_purchase:zero}};
+  const baseline=await ready();
+  const filteredOffer=await ready({...query,offer_id:'999'});
+  expect(filteredOffer.metrics.quiz).toEqual(baseline.metrics.quiz);
+  expect(filteredOffer.metrics.offers).toEqual(emptyOffers);
+  expect((await ready({...query,preland_id:'missing'})).metrics).toEqual({
+    quiz:{activity:{entered:0,started:0,completed:0,questions:{preferred_gender:{viewed:0,confirmed:0},preferred_ethnicity:{viewed:0,confirmed:0},email:{viewed:0,confirmed:0}}},
+      conversions:{questions:{preferred_gender:zero,preferred_ethnicity:zero,email:zero},started_completed:zero,started_offer:zero}},
+    offers:emptyOffers,
+  });
+});
 it('one SELECT for snapshot, no writes, date compared with query snapshot',async()=>{
   const prepare=vi.fn(db.prepare.bind(db));const wrapped=new Proxy(db,{get(target,key){return key==='prepare'?prepare:Reflect.get(target,key);}});
   const before=(await db.prepare('SELECT * FROM users').all()).results;

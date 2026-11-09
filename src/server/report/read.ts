@@ -4,9 +4,10 @@ import { HttpFailure } from '../http/security';
 import { BUDGETS } from '../storage/capacity';
 import { receiverMode } from '../delivery/contract';
 const clock = "CAST((julianday('now') - 2440587.5) * 86400000 AS INTEGER)";
-const unique = (source: string, condition: string) => `(SELECT COUNT(DISTINCT user_id) FROM ${source} WHERE ${condition})`;
+const unique = (condition: string) => `COUNT(DISTINCT CASE WHEN ${condition} THEN user_id END)`;
 const pair = (numerator: number, denominator: number) => ({ numerator, denominator });
 // One SELECT owns the event snapshot, metadata and clock. No event rows leave D1.
+// Aggregate each relation once: repeated scalar reads expand the CTE graph beyond D1's query-depth budget.
 export const funnelSql = `WITH
  clock AS (SELECT COALESCE(?1, ${clock}) AS updated_at),
  selected AS (SELECT * FROM events WHERE (?4 IS NULL OR preland_id = ?4)),
@@ -26,24 +27,30 @@ export const funnelSql = `WITH
    AND t.event_type = 'offer_transition' AND t.flow_mode = 'quiz'),
  transition_cohort AS (SELECT * FROM offer_activity WHERE event_type = 'offer_transition'),
  transition_results AS (SELECT DISTINCT t.user_id, p.event_type FROM transition_cohort t JOIN events p ON p.click_id = t.click_id
-   AND p.user_id = t.user_id AND p.preland_id = t.preland_id AND p.offer_id = t.offer_id AND p.event_type IN ('Lead', 'Purchase'))
+   AND p.user_id = t.user_id AND p.preland_id = t.preland_id AND p.offer_id = t.offer_id AND p.event_type IN ('Lead', 'Purchase')),
+ activity_counts AS (SELECT
+   ${unique("event_type = 'funnel_entered'")} AS entered,
+   ${unique("event_type = 'question_viewed'")} AS started,
+   ${unique("event_type = 'answer_confirmed' AND question_id = 'email'")} AS completed,
+   ${reportQuestions.map((q) => `${unique(`event_type = 'question_viewed' AND question_id = '${q}'`)} AS ${q}_viewed,
+   ${unique(`event_type = 'answer_confirmed' AND question_id = '${q}'`)} AS ${q}_confirmed`).join(',\n')}
+   FROM activity),
+ question_counts AS (SELECT ${reportQuestions.map((q) => `${unique(`question_id = '${q}'`)} AS ${q}_converted`).join(',\n')} FROM question_results),
+ completion_counts AS (SELECT COUNT(DISTINCT user_id) AS started_completed FROM completions),
+ quiz_transition_counts AS (SELECT COUNT(DISTINCT user_id) AS started_offer FROM quiz_transitions),
+ offer_counts AS (SELECT
+   ${unique("event_type = 'offer_transition'")} AS transitioned,
+   ${unique("event_type = 'offer_transition' AND flow_mode = 'bypass'")} AS bypass,
+   ${unique("event_type = 'Lead'")} AS leads,
+   ${unique("event_type = 'Purchase'")} AS buyers,
+   COUNT(CASE WHEN event_type = 'Purchase' THEN 1 END) AS purchases FROM offer_activity),
+ transition_counts AS (SELECT ${unique("event_type = 'Lead'")} AS transition_lead,
+   ${unique("event_type = 'Purchase'")} AS transition_purchase FROM transition_results)
  SELECT clock.updated_at, s.history_unverified, s.history_available_from,
- ${unique('activity', "event_type = 'funnel_entered'")} AS entered,
- ${unique('activity', "event_type = 'question_viewed'")} AS started,
- ${unique('activity', "event_type = 'answer_confirmed' AND question_id = 'email'")} AS completed,
- ${reportQuestions.map((q) => `${unique('activity', `event_type = 'question_viewed' AND question_id = '${q}'`)} AS ${q}_viewed,
- ${unique('activity', `event_type = 'answer_confirmed' AND question_id = '${q}'`)} AS ${q}_confirmed,
- ${unique('question_results', `question_id = '${q}'`)} AS ${q}_converted`).join(',\n')},
- ${unique('completions', '1')} AS started_completed,
- ${unique('quiz_transitions', '1')} AS started_offer,
- ${unique('offer_activity', "event_type = 'offer_transition'")} AS transitioned,
- ${unique('offer_activity', "event_type = 'offer_transition' AND flow_mode = 'bypass'")} AS bypass,
- ${unique('offer_activity', "event_type = 'Lead'")} AS leads,
- ${unique('offer_activity', "event_type = 'Purchase'")} AS buyers,
- (SELECT COUNT(*) FROM offer_activity WHERE event_type = 'Purchase') AS purchases,
- ${unique('transition_results', "event_type = 'Lead'")} AS transition_lead,
- ${unique('transition_results', "event_type = 'Purchase'")} AS transition_purchase
- FROM clock LEFT JOIN system_control s ON s.singleton_id = 1`;
+   activity_counts.*, question_counts.*, completion_counts.*, quiz_transition_counts.*, offer_counts.*, transition_counts.*
+ FROM clock LEFT JOIN system_control s ON s.singleton_id = 1
+ CROSS JOIN activity_counts CROSS JOIN question_counts CROSS JOIN completion_counts
+ CROSS JOIN quiz_transition_counts CROSS JOIN offer_counts CROSS JOIN transition_counts`;
 export async function readFunnel(db: D1Database, filters: ReportQuery, testNow?: number) {
   const row = await db.prepare(funnelSql).bind(testNow ?? null, Date.parse(filters.from + 'T00:00:00Z'), Date.parse(filters.to + 'T00:00:00Z') + DAY, filters.preland_id ?? null, filters.offer_id ?? null).first<Record<string, number | null>>();
   if (!row || !Number.isSafeInteger(row.updated_at) || ![0, 1].includes(row.history_unverified!)) throw new Error('history_metadata_invalid');
