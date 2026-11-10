@@ -1,0 +1,13 @@
+[workflow]
+persistent_facts = [
+  "file:{project-root}/_bmad/custom/architecture-readiness.md"
+]
+
+activation_steps_append = [
+  "Визнач застосовність перевірки готовності. Для суттєвих змін Reviewer Gate обов'язковий; finalize лише після READY_FOR_IMPLEMENTATION."
+]
+
+finalize_reviewers = [
+  "Прочитай {project-root}/_bmad/custom/architecture-readiness.md і виконай R1 у незалежному контексті. Перевір увесь пакет джерел і дизайну, не лише spine.",
+  "Прочитай {project-root}/_bmad/custom/architecture-readiness.md і виконай R2 у незалежному контексті. Перевір увесь пакет джерел і дизайну, не лише spine."
+]

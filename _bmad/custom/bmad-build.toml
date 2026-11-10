@@ -1,0 +1,38 @@
+[workflow]
+persistent_facts = [
+  "file:{project-root}/_bmad/custom/architecture-readiness.md"
+]
+
+activation_steps_append = [
+  "Перед будь-якою реалізацією перевір готовність за architecture-readiness.md, включно з resume та oneshot. Додай джерела вимог і актуальний висновок до context специфікації; для малої зміни зафіксуй delta-check. Статус ready-for-dev без доказів недостатній."
+]
+
+implementation_handoff = """
+Запусти субагента без попереднього контексту розмови.
+Він має прочитати AGENTS.md, {spec_file} повністю та всі файли context.
+Специфікація є контрактом реалізації в межах доручення та ієрархії джерел AGENTS.md.
+Перед змінами перевір актуальність висновку готовності; суперечності не обходь.
+Після роботи повідом зміни, фактичні перевірки, ризики й незавершене.
+"""
+
+[[workflow.review_layers]]
+id = "blind-hunter"
+name = "Blind Hunter"
+instruction = """
+Запусти субагента без попереднього контексту.
+Нехай прочитає {project-root}/_bmad/custom/architecture-readiness.md,
+застосує R3 до diff у {diff_file} і поверне лише доказові findings.
+Не передавай claims або висновки інших рев'юерів.
+Рев'юер не змінює файли, не викликає skills і не створює субагентів.
+"""
+
+[[workflow.oneshot_review_layers]]
+id = "blind-hunter"
+name = "Blind Hunter"
+instruction = """
+Запусти субагента без попереднього контексту.
+Нехай прочитає {project-root}/_bmad/custom/architecture-readiness.md,
+застосує R3 до змін поточного worktree і поверне лише доказові findings.
+Не передавай claims або висновки інших рев'юерів.
+Рев'юер не змінює файли, не викликає skills і не створює субагентів.
+"""

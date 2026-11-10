@@ -21,6 +21,9 @@ _bmad/*
 _bmad/custom/*
 !_bmad/custom/config.toml
 !_bmad/custom/bmad-review.toml
+!_bmad/custom/architecture-readiness.md
+!_bmad/custom/bmad-architecture.toml
+!_bmad/custom/bmad-build.toml
 _bmad/**/*.user.toml
 
 dist-demo/

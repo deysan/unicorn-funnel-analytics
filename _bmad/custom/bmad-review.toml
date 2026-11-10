@@ -1,9 +1,10 @@
 [workflow]
 review_guidance = [
   "Пиши українською. Дотримуйся AGENTS.md; перегляд не дозволяє імплементацію, коміти або зміну погоджених бізнес-рішень.",
-  "Це етап проєктування, не готовності до імплементації. Враховуй поточний блок аудиту; відрізняй нові суперечності від явно запланованої технічної деталізації та вже відомих обмежень.",
+  "Визнач поточну мету перевірки з доручення. Межі MVP не скасовують вимог до цільового дизайну. Уже задокументоване обмеження перевіряй на сумісність із вимогою; його відомість не є підставою відхилити зауваження.",
   "Кожне зауваження обґрунтуй конкретними пунктами та відтворюваним прикладом. Не вимагай повного корпоративного процесу для малого MVP.",
-  "Погоджені рішення можна критикувати з доказами, але альтернативи не стають прийнятими без рішення власника. Не приписуй відсутній архітектурі конкретну реалізацію."
+  "Погоджені рішення можна критикувати з доказами, але альтернативи не стають прийнятими без рішення власника. Не приписуй відсутній архітектурі конкретну реалізацію.",
+  "file:{project-root}/_bmad/custom/architecture-readiness.md"
 ]
 output_format = "both"
 
@@ -13,3 +14,17 @@ name = "Adversarial"
 applies_to = "any"
 when = "always"
 instruction = "Load references/lens-adversarial.md from the skill root. Apply its critical method and canonical findings shape, with this project override: no minimum finding count. Report only grounded findings; an empty array is valid. Never invent or pad findings to meet the shipped ten-item quota."
+
+[[workflow.lenses]]
+code = "source-traceability"
+name = "Source Traceability"
+applies_to = "docs"
+when = "Перевірка вимог, архітектури або готовності до реалізації; не суто редакторська зміна."
+instruction = "Прочитай {project-root}/_bmad/custom/architecture-readiness.md і виконай R1. Поверни findings у форматі bmad-review."
+
+[[workflow.lenses]]
+code = "capacity-reliability"
+name = "Capacity and Reliability"
+applies_to = "docs"
+when = "Дизайн або план задає чи змінює NFR, сховище, доставку, транзакції, маршрутизацію або критичний шлях."
+instruction = "Прочитай {project-root}/_bmad/custom/architecture-readiness.md і виконай R2. Поверни findings у форматі bmad-review."
